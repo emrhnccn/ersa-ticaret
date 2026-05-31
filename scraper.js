@@ -74,8 +74,14 @@ export const services = [
   { slug: "orijinal-yedek-parca", title: "Orijinal Yedek Parça Tedariği", description: "Tüm marka ve modellere uygun orijinal garantili yedek parça satışı." }
 ];
 
+// SEO Uyumlu Teknik Rehber Makaleleri
 export const blogPosts = [
-  { slug: "kombi-bakim-rehberi", title: "Kış Gelmeden Kombi Bakımı Nasıl Yapılmalı?", description: "Kış aylarına girmeden önce kombinizi nasıl hazırlamanız gerektiğine dair ipuçları." }
+  { slug: "kombi-bakim-rehberi", title: "Kış Gelmeden Kombi Bakımı Nasıl Yapılmalı?", description: "Kış aylarına girmeden önce kombinizi nasıl hazırlamanız gerektiğine dair hayati ipuçları ve değiştirilmesi gereken filtreler." },
+  { slug: "camasir-makinesi-su-bosaltmiyor", title: "Çamaşır Makinesi Su Boşaltmıyor Ne Yapmalıyım?", description: "Çamaşır makinenizin suyunu boşaltmamasının en yaygın nedenleri, pompa motoru arızası tespiti ve çözüm yolları." },
+  { slug: "bulasik-makinesi-iyi-yikamiyor", title: "Bulaşık Makinesi İyi Yıkamıyor Sorunu ve Çözümü", description: "Bulaşık makineniz bardakları çiziyor veya lekeli bırakıyorsa kontrol etmeniz gereken parçalar ve rezistans sorunları." },
+  { slug: "kombi-su-eksiltiyor", title: "Kombi Su Eksiltiyor (Basınç Düşüyor): Nedenleri", description: "Kombi su basıncı sürekli düşüyorsa genleşme tankı, eşanjör veya emniyet ventili arızası nasıl tespit edilir?" },
+  { slug: "buzdolabi-sogutmuyor", title: "Buzdolabı Alt veya Üst Bölme Soğutmuyor Arızası", description: "No-frost buzdolaplarında soğutma probleminin ana kaynakları (rezistans, fan, sensör arızaları) ve parça seçimi." },
+  { slug: "orijinal-yedek-parca-onemi", title: "Orijinal Yedek Parça Kullanmanın Cihaz Ömrüne Etkisi", description: "Kombi ve beyaz eşya onarımında neden A kalite veya orijinal yedek parça tercih edilmelidir? Merdiven altı parçaların zararları." }
 ];
 `;
   
