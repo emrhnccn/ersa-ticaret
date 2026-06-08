@@ -1,12 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useCart } from '@/context/CartContext'; // Sepet verisini çekiyoruz
-import { ShoppingCart, Menu, X, Phone } from 'lucide-react';
+import { useCart } from '@/context/CartContext'; // Eğer TS hatası verirse burayı '../context/CartContext' yapabilirsin
+import { ShoppingCart, Menu, X, Phone, MapPin } from 'lucide-react';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
-  const { getCartCount } = useCart(); // Sepetteki toplam ürün sayısını alıyoruz
+  const { getCartCount } = useCart();
 
   const cartCount = getCartCount();
 
@@ -15,25 +15,27 @@ export default function Header() {
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between">
         
         {/* LOGO */}
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <span className="text-xl font-black tracking-tight text-slate-900">
             ERSA <span className="text-blue-600">TİCARET</span>
           </span>
         </Link>
 
-        {/* MASAÜSTÜ MENÜ */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+        {/* MASAÜSTÜ MENÜ (Tüm sayfalar eksiksiz eklendi) */}
+        <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-600">
           <Link href="/" className="hover:text-blue-600 transition-colors">Ana Sayfa</Link>
           <Link href="/urunler" className="hover:text-blue-600 transition-colors">Ürün Kataloğu</Link>
           <Link href="/rehber" className="hover:text-blue-600 transition-colors">Yedek Parça Rehberi</Link>
+          <Link href="/magazamiz" className="hover:text-blue-600 transition-colors">Mağazamız</Link>
+          <Link href="/iletisim" className="hover:text-blue-600 transition-colors">İletişim</Link>
         </nav>
 
-        {/* SAĞ TARAF: SEPET VE İLETİŞİM */}
-        <div className="hidden md:flex items-center gap-4">
-          {/* Alışveriş Sepeti İkonu */}
+        {/* SAĞ TARAF: SEPET VE HIZLI AKSİYONLAR */}
+        <div className="hidden md:flex items-center gap-3">
+          {/* Alışveriş Sepeti / Sipariş Listesi */}
           <Link 
             href="/sepet" 
-            className="relative p-2.5 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-xl transition-all mr-2"
+            className="relative p-2.5 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-xl transition-all"
             title="Sipariş Listem"
           >
             <ShoppingCart size={22} />
@@ -44,16 +46,17 @@ export default function Header() {
             )}
           </Link>
 
+          {/* Hızlı Arama Butonu */}
           <a 
             href="tel:+905525843073" 
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-blue-600 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-slate-900/5"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-blue-600 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-slate-900/5 whitespace-nowrap"
           >
-            <Phone size={16} /> Hızlı Ara
+            <Phone size={15} /> Hızlı Ara
           </a>
         </div>
 
-        {/* MOBİL SAĞ TARAF (Mobil kullanıcılar için sepet ve menü) */}
-        <div className="flex items-center gap-2 md:hidden">
+        {/* MOBİL SAĞ TARAF (Sepet, Menü) */}
+        <div className="flex items-center gap-1 md:hidden">
           {/* Mobil Sepet İkonu */}
           <Link 
             href="/sepet" 
@@ -78,16 +81,21 @@ export default function Header() {
 
       </div>
 
-      {/* MOBİL MENÜ SEÇENEKLERİ */}
+      {/* MOBİL MENÜ PANELI (Tüm sayfalar eksiksiz eklendi) */}
       {isOpen && (
-        <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-slate-100 shadow-xl p-4 flex flex-col gap-3 font-semibold animate-in slide-in-from-top-5 duration-200">
+        <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-slate-100 shadow-xl p-4 flex flex-col gap-2 font-semibold animate-in slide-in-from-top-5 duration-200">
           <Link href="/" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Ana Sayfa</Link>
           <Link href="/urunler" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Ürün Kataloğu</Link>
           <Link href="/rehber" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Yedek Parça Rehberi</Link>
-          <Link href="/sepet" onClick={() => setIsOpen(false)} className="p-3 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-between">
-            <span>Sipariş Listem (Sepetim)</span>
-            <span className="bg-blue-600 text-white text-xs px-2.5 py-0.5 rounded-full">{cartCount} Ürün</span>
-          </Link>
+          <Link href="/magazamiz" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Mağazamız</Link>
+          <Link href="/iletisim" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">İletişim</Link>
+          
+          <div className="border-t border-slate-100 my-2 pt-2">
+            <Link href="/sepet" onClick={() => setIsOpen(false)} className="p-3 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-between">
+              <span>Sipariş Listem (Sepetim)</span>
+              <span className="bg-blue-600 text-white text-xs px-2.5 py-0.5 rounded-full">{cartCount} Ürün</span>
+            </Link>
+          </div>
         </div>
       )}
     </header>
