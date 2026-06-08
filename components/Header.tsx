@@ -26,7 +26,7 @@ export default function Header() {
           <Link href="/" className="hover:text-blue-600 transition-colors">Ana Sayfa</Link>
           <Link href="/urunler" className="hover:text-blue-600 transition-colors">Ürün Kataloğu</Link>
           <Link href="/rehber" className="hover:text-blue-600 transition-colors">Yedek Parça Rehberi</Link>
-          <Link href="/magazamiz" className="hover:text-blue-600 transition-colors">Mağazamız</Link>
+          <Link href="/kurumsal" className="hover:text-blue-600 transition-colors">Mağazamız</Link>
           <Link href="/iletisim" className="hover:text-blue-600 transition-colors">İletişim</Link>
         </nav>
 
@@ -87,7 +87,7 @@ export default function Header() {
           <Link href="/" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Ana Sayfa</Link>
           <Link href="/urunler" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Ürün Kataloğu</Link>
           <Link href="/rehber" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Yedek Parça Rehberi</Link>
-          <Link href="/magazamiz" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Mağazamız</Link>
+          <Link href="/kurumsal" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Mağazamız</Link>
           <Link href="/iletisim" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">İletişim</Link>
           
           <div className="border-t border-slate-100 my-2 pt-2">
