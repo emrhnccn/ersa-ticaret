@@ -5,6 +5,7 @@ import './globals.css';
 import Header from '@/components/Header';
 import Footer from "@/components/Footer";
 import { MessageCircle } from 'lucide-react';
+import { CartProvider } from '@/context/CartContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -80,27 +81,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="tr">
       {/* Footer'ın her zaman en altta kalması için flex-col ve min-h-screen eklendi */}
       <body className={`${inter.className} flex flex-col min-h-screen`}>
-        
-        <Header />
-        
-        {/* Sayfa içerikleri bu main etiketinin içinde yer alacak (flex-grow ile tüm boşluğu doldurur) */}
-        <main className="flex-grow pt-16">
-          {children}
-        </main>
-        
-        {/* Sabit (Kayan) WhatsApp Butonu */}
-        <a 
-          href="https://wa.me/905525843073?text=Merhaba,%20bilgi%20almak%20istiyorum." 
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-50"
-        >
-          <MessageCircle size={28} />
-        </a>
+        {/* SEPET SİSTEMİ: Tüm siteyi sarmalayan en dış katman */}
+        <CartProvider>
+          
+          <Header />
+          
+          {/* Sayfa içerikleri bu main etiketinin içinde yer alacak */}
+          <main className="flex-grow pt-16">
+            {children}
+          </main>
+          
+          {/* Sabit (Kayan) WhatsApp Butonu */}
+          <a 
+            href="https://wa.me/905525843073?text=Merhaba,%20bilgi%20almak%20istiyorum." 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-6 bg-emerald-500 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-50"
+          >
+            <MessageCircle size={28} />
+          </a>
 
-        {/* YENİ VE ŞIK FOOTER BİLEŞENİMİZ */}
-        <Footer />
-        
+          {/* YENİ VE ŞIK FOOTER BİLEŞENİMİZ */}
+          <Footer />
+
+        </CartProvider>
       </body>
     </html>
   );

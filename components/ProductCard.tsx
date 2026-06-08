@@ -1,10 +1,12 @@
 'use client';
-import { MessageCircle } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { MessageCircle, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
 export default function ProductCard({ product }: any) {
   const [imgSrc, setImgSrc] = useState(product.image);
+  const { addToCart } = useCart();
 
   const waLink = `https://wa.me/905525843073?text=Merhaba,%20${product.title}%20(${product.code})%20parçası%20hakkında%20fiyat%20almak%20istiyorum.`;
 
@@ -26,27 +28,46 @@ export default function ProductCard({ product }: any) {
         </div>
 
         <div className="p-5 flex-grow flex flex-col z-20 bg-white">
-          <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-extrabold uppercase tracking-widest rounded-md w-max mb-3">
-            {product.category}
-          </span>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-extrabold uppercase tracking-widest rounded-md w-max">
+              {product.category}
+            </span>
+            {product.brand && (
+              <span className="inline-block px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase rounded-md w-max">
+                {product.brand}
+              </span>
+            )}
+          </div>
           <h3 className="font-bold text-slate-800 text-sm md:text-base mb-1.5 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
             {product.title}
           </h3>
-          <p className="text-xs font-medium text-slate-400 mb-5">
+          <p className="text-xs font-medium text-slate-400 mb-2">
             Kod: <span className="text-slate-600">{product.code}</span>
           </p>
         </div>
       </Link>
         
-      <div className="px-5 pb-5 bg-white">
+      {/* İKİLİ BUTON YAPISI */}
+      <div className="px-5 pb-5 bg-white grid grid-cols-2 gap-2">
+        {/* Doğrudan WhatsApp'tan Fiyat Sor */}
         <a 
           href={waLink} 
           target="_blank" 
-          className="w-full py-2.5 bg-slate-800 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/40 active:scale-95"
+          rel="noopener noreferrer"
+          className="py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/30 active:scale-95 text-center"
         >
-          <MessageCircle size={18} /> Fiyat Sorun
+          <MessageCircle size={16} /> Fiyat Sor
         </a>
+
+        {/* Sepete (Sipariş Listesine) Ekle */}
+        <button 
+          onClick={() => addToCart(product)}
+          className="py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300 shadow-lg shadow-blue-600/10 active:scale-95"
+        >
+          <ShoppingCart size={16} /> Sepete Ekle
+        </button>
       </div>
+
     </div>
   );
 }
