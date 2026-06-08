@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useCart } from '@/context/CartContext'; // Eğer TS hatası verirse burayı '../context/CartContext' yapabilirsin
+import { useCart } from '@/context/CartContext'; // Eğer TS yolu bulamazsa '../context/CartContext' yapabilirsin
 import { ShoppingCart, Menu, X, Phone } from 'lucide-react';
 
 export default function Header() {
@@ -14,9 +14,14 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-50">
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between">
         
-        {/* LOGO */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl font-black tracking-tight text-slate-900">
+        {/* LOGO VE KURUMSAL YAZI */}
+        <Link href="/" className="flex items-center gap-3 shrink-0">
+          <img 
+            src="/logo.png" 
+            alt="Ersa Ticaret Logo" 
+            className="h-9 w-auto object-contain"
+          />
+          <span className="text-xl font-black tracking-tight text-slate-900 hidden sm:inline-block">
             ERSA <span className="text-blue-600">TİCARET</span>
           </span>
         </Link>
@@ -26,7 +31,6 @@ export default function Header() {
           <Link href="/" className="hover:text-blue-600 transition-colors">Ana Sayfa</Link>
           <Link href="/urunler" className="hover:text-blue-600 transition-colors">Ürün Kataloğu</Link>
           <Link href="/rehber" className="hover:text-blue-600 transition-colors">Yedek Parça Rehberi</Link>
-          {/* Yönlendirme /kurumsal olarak güncellendi */}
           <Link href="/kurumsal" className="hover:text-blue-600 transition-colors">Mağazamız</Link>
           <Link href="/iletisim" className="hover:text-blue-600 transition-colors">İletişim</Link>
         </nav>
@@ -88,7 +92,6 @@ export default function Header() {
           <Link href="/" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Ana Sayfa</Link>
           <Link href="/urunler" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Ürün Kataloğu</Link>
           <Link href="/rehber" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Yedek Parça Rehberi</Link>
-          {/* Mobil yönlendirme de /kurumsal yapıldı */}
           <Link href="/kurumsal" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Mağazamız</Link>
           <Link href="/iletisim" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">İletişim</Link>
           
