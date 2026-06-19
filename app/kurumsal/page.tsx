@@ -13,24 +13,24 @@ export default function KurumsalPage() {
       <div className="bg-slate-900 pt-20 pb-40 relative overflow-hidden">
         {/* Arka plan süsleri */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none opacity-40">
-          <div className="absolute -top-[50%] -right-[10%] w-[70%] h-[100%] rounded-full bg-blue-600/20 blur-[100px]" />
-          <div className="absolute top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 blur-[80px]" />
+          <div className="absolute -top-[50%] -right-[10%] w-[70%] h-[100%] rounded-full bg-blue-600/30 blur-[100px] animate-pulse" style={{ animationDuration: '5s' }} />
+          <div className="absolute top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-rose-600/20 blur-[100px] animate-pulse" style={{ animationDuration: '7s', animationDelay: '1s' }} />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 text-blue-400 rounded-2xl mb-6 backdrop-blur-sm border border-white/10 shadow-lg">
-            <Store size={32} />
+          <div className="animate-fade-in-up inline-flex items-center justify-center w-16 h-16 bg-white/10 text-blue-400 rounded-2xl mb-6 backdrop-blur-sm border border-white/10 shadow-lg shadow-blue-500/20">
+            <Store size={32} className="animate-bounce" style={{ animationDuration: '3s' }} />
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight drop-shadow-md">
-            Ersa Ticaret'e <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Hoş Geldiniz</span>
+          <h1 className="animate-fade-in-up-delay-1 text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight drop-shadow-md">
+            Ersa Ticaret'e <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-rose-400">Hoş Geldiniz</span>
           </h1>
-          <p className="text-slate-300 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl mx-auto">
+          <p className="animate-fade-in-up-delay-2 text-slate-300 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl mx-auto">
             Yılların getirdiği tecrübe ve geniş stok ağımızla, beyaz eşya ve kombi yedek parça sektöründe bölgenin en güvenilir tedarikçisi olmaktan gurur duyuyoruz.
           </p>
           
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="animate-fade-in-up-delay-2 flex flex-wrap justify-center gap-4">
             <div className="flex items-center gap-2 text-slate-200 font-medium bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl backdrop-blur-sm">
-              <ShieldCheck className="text-emerald-400" size={20} /> %100 Orijinal Parça
+              <ShieldCheck className="text-rose-400" size={20} /> %100 Orijinal Parça
             </div>
             <div className="flex items-center gap-2 text-slate-200 font-medium bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl backdrop-blur-sm">
               <Truck className="text-blue-400" size={20} /> Hızlı Tedarik Ağı

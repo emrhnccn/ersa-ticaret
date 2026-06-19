@@ -40,16 +40,18 @@ export default function IletisimPage() {
       {/* KOYU TEPE (HERO) EKRANI */}
       <div className="bg-slate-900 pt-16 pb-32 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none opacity-40">
-          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/20 blur-[80px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 blur-[80px]" />
+          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/30 blur-[100px] animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-rose-600/20 blur-[100px] animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-blue-500/30 shadow-lg">
-            <MapPin size={32} />
+          <div className="animate-fade-in-up w-16 h-16 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-blue-500/30 shadow-lg shadow-blue-500/20">
+            <MapPin size={32} className="animate-bounce" style={{ animationDuration: '3s' }} />
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">Bize Ulaşın</h1>
-          <p className="text-slate-400 text-lg md:text-xl max-w-2xl">
+          <h1 className="animate-fade-in-up-delay-1 text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight drop-shadow-lg">
+            Bize <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-rose-400">Ulaşın</span>
+          </h1>
+          <p className="animate-fade-in-up-delay-2 text-slate-300 text-lg md:text-xl max-w-2xl font-medium drop-shadow-md">
             Yedek parça stok durumu, teknik destek veya toptan alımlar için bizimle iletişime geçin. Dükkanımızı ziyaret ederek parçaları yakından inceleyebilirsiniz.
           </p>
         </div>

@@ -105,8 +105,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           
             <Header />
             
-            {/* Sayfa içerikleri — pt-16 header + announcement bar için artırıldı */}
-            <main className="flex-grow pt-[100px]">
+            {/* Sayfa içerikleri */}
+            <main className="flex-grow">
               {children}
             </main>
             

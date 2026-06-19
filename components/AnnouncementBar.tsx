@@ -34,9 +34,11 @@ export default function AnnouncementBar() {
             <span className="hidden sm:inline">Sipariş Hattı:</span>
             <span className="text-white font-bold">0552 584 30 73</span>
           </a>
-          <span className="hidden md:flex items-center gap-1.5">
-            <Clock size={13} className="text-emerald-400" />
-            Pzt-Cmt: 08:30-19:00
+          <span className="hidden lg:flex items-center gap-2">
+            <Clock size={14} className="text-emerald-400" />
+            <span><span className="font-semibold text-white">Pzt-Cmt:</span> 08:30-19:00</span>
+            <span className="text-slate-600">|</span>
+            <span><span className="font-semibold text-white">Pazar:</span> 13:00-17:00</span>
           </span>
         </div>
 

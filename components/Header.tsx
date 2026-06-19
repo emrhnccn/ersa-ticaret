@@ -12,7 +12,7 @@ export default function Header() {
 
   return (
     
-    <header className="fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 z-50 shadow-lg" style={{ top: '36px' }}>
+    <header className="sticky top-0 z-50 h-16 bg-slate-900 border-b border-slate-800 shadow-lg w-full">
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between">
         
         {/* LOGO VE KURUMSAL YAZI */}
