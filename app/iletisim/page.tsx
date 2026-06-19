@@ -1,11 +1,43 @@
 'use client';
-import { MapPin, Phone, Mail, Clock, MessageCircle, Send } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, MessageCircle, Send, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 
 export default function IletisimPage() {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    subject: 'Parça Stok Sorgulama',
+    message: '',
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // WhatsApp mesaj şablonu oluştur
+    let waMessage = `*ERSA TİCARET - İLETİŞİM FORMU*\n`;
+    waMessage += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+    waMessage += `👤 *Ad Soyad:* ${formData.name}\n`;
+    waMessage += `📞 *Telefon:* ${formData.phone}\n`;
+    waMessage += `📋 *Konu:* ${formData.subject}\n\n`;
+    waMessage += `💬 *Mesaj:*\n${formData.message}\n\n`;
+    waMessage += `━━━━━━━━━━━━━━━━━━━━\n`;
+    waMessage += `Bu mesaj ersaticaret.com iletişim formundan gönderilmiştir.`;
+
+    const whatsappUrl = `https://wa.me/905525843073?text=${encodeURIComponent(waMessage)}`;
+    window.open(whatsappUrl, '_blank');
+    
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      setFormData({ name: '', phone: '', subject: 'Parça Stok Sorgulama', message: '' });
+    }, 4000);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       
-      {/* --- KOYU TEPE (HERO) EKRANI --- */}
+      {/* KOYU TEPE (HERO) EKRANI */}
       <div className="bg-slate-900 pt-16 pb-32 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none opacity-40">
           <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/20 blur-[80px]" />
@@ -23,7 +55,7 @@ export default function IletisimPage() {
         </div>
       </div>
 
-      {/* --- İÇERİK ALANI --- */}
+      {/* İÇERİK ALANI */}
       <div className="max-w-7xl mx-auto px-4 relative z-20 -mt-16 w-full pb-20">
         
         {/* ÜST BÖLÜM: BİLGİLER VE FORM */}
@@ -45,7 +77,6 @@ export default function IletisimPage() {
                   </div>
                 </div>
 
-                {/* GÜNCELLENEN TAM AÇIK ADRES (SEO İÇİN ÖNEMLİ) */}
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
                     <MapPin size={24} />
@@ -65,19 +96,29 @@ export default function IletisimPage() {
                   <div>
                     <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Çalışma Saatleri</p>
                     <p className="text-base font-bold text-slate-800">Pzt - Cmt: 08:30 - 19:00</p>
-                    <p className="text-base font-bold text-slate-800 text-blue-600">Pazar: 13:00 - 17:00</p>
+                    <p className="text-base font-bold text-blue-600">Pazar: 13:00 - 17:00</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
+                    <Mail size={24} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">E-posta</p>
+                    <a href="mailto:info@ersaticaret.com" className="text-base font-bold text-slate-800 hover:text-blue-600 transition-colors">info@ersaticaret.com</a>
                   </div>
                 </div>
               </div>
 
-              {/* Dev WhatsApp Butonu */}
+              {/* WhatsApp Butonu */}
               <a 
                 href="https://wa.me/905525843073?text=Merhaba,%20bilgi%20almak%20istiyorum."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-8 w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-emerald-500/30 active:scale-95"
               >
-                <MessageCircle size={22} /> WhatsApp'tan Yazın
+                <MessageCircle size={22} /> WhatsApp&apos;tan Yazın
               </a>
             </div>
           </div>
@@ -85,52 +126,93 @@ export default function IletisimPage() {
           {/* Sağ Taraf: İletişim Formu */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-200 shadow-xl shadow-slate-900/5 h-full">
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">Bize Mesaj Gönderin</h3>
-              <p className="text-slate-500 mb-8">Parça talepleriniz veya sorularınız için aşağıdaki formu doldurabilirsiniz. Size en kısa sürede dönüş yapacağız.</p>
               
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Adınız Soyadınız</label>
-                    <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" placeholder="Usta Ahmet" />
+              {submitted ? (
+                /* Başarı Mesajı */
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6">
+                    <CheckCircle2 size={44} />
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Telefon Numaranız</label>
-                    <input type="tel" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" placeholder="0555 555 55 55" />
-                  </div>
+                  <h3 className="text-2xl font-bold text-slate-800 mb-3">Mesajınız WhatsApp&apos;a Yönlendirildi!</h3>
+                  <p className="text-slate-500 max-w-md">WhatsApp uygulamasında mesajınızı göndererek işlemi tamamlayabilirsiniz. Size en kısa sürede dönüş yapacağız.</p>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Konu</label>
-                  <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-700">
-                    <option>Parça Stok Sorgulama</option>
-                    <option>Toptan Fiyat Talebi</option>
-                    <option>Teknik Destek / Soru</option>
-                    <option>Diğer</option>
-                  </select>
-                </div>
+              ) : (
+                <>
+                  <h3 className="text-2xl font-bold text-slate-800 mb-2">Bize Mesaj Gönderin</h3>
+                  <p className="text-slate-500 mb-8">Parça talepleriniz veya sorularınız için aşağıdaki formu doldurabilirsiniz. Mesajınız WhatsApp üzerinden bize iletilecektir.</p>
+                  
+                  <form className="space-y-6" onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Adınız Soyadınız *</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" 
+                          placeholder="Usta Ahmet" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Telefon Numaranız *</label>
+                        <input 
+                          type="tel" 
+                          required
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" 
+                          placeholder="0555 555 55 55" 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Konu</label>
+                      <select 
+                        value={formData.subject}
+                        onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-700"
+                      >
+                        <option>Parça Stok Sorgulama</option>
+                        <option>Toptan Fiyat Talebi</option>
+                        <option>Teknik Destek / Soru</option>
+                        <option>Diğer</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Mesajınız</label>
-                  <textarea rows={4} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all resize-none" placeholder="Aradığınız parçanın kodunu veya sorunuzu buraya yazın..."></textarea>
-                </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Mesajınız *</label>
+                      <textarea 
+                        rows={4} 
+                        required
+                        value={formData.message}
+                        onChange={(e) => setFormData({...formData, message: e.target.value})}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all resize-none" 
+                        placeholder="Aradığınız parçanın kodunu veya sorunuzu buraya yazın..."
+                      ></textarea>
+                    </div>
 
-                <button className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-blue-500/30 active:scale-95 ml-auto">
-                  <Send size={20} /> Mesajı Gönder
-                </button>
-              </form>
+                    <button 
+                      type="submit"
+                      className="w-full md:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-blue-500/30 active:scale-95 ml-auto"
+                    >
+                      <Send size={20} /> WhatsApp ile Gönder
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        {/* --- HARİTA VE YOL TARİFİ ALANI --- */}
+        {/* HARİTA VE YOL TARİFİ ALANI */}
         <div className="bg-white rounded-3xl p-4 md:p-8 border border-slate-200 shadow-xl shadow-slate-900/5">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 px-4 md:px-0">
             <div>
               <h3 className="text-2xl font-bold text-slate-800">Mağazamızı Ziyaret Edin</h3>
-              <p className="text-slate-500">Darıca'daki dükkanımıza gelerek yedek parçaları yerinde inceleyebilirsiniz.</p>
+              <p className="text-slate-500">Darıca&apos;daki dükkanımıza gelerek yedek parçaları yerinde inceleyebilirsiniz.</p>
             </div>
-            {/* GÜNCELLENEN YOL TARİFİ LİNKİ */}
             <a 
               href="https://maps.google.com/?q=Nenehatun,+Battal+Gazi+Cd.+No:139/A,+41700+Darıca/Kocaeli" 
               target="_blank"
@@ -141,7 +223,6 @@ export default function IletisimPage() {
             </a>
           </div>
           
-          {/* GÜNCELLENEN GOOGLE MAPS İFRAME KODU (Tam Adres Konumu) */}
           <div className="w-full h-[400px] rounded-2xl overflow-hidden border border-slate-200 relative">
             <iframe 
               src="https://maps.google.com/maps?q=Nenehatun,+Battal+Gazi+Cd.+No:139/A,+41700+Darıca/Kocaeli&t=&z=15&ie=UTF8&iwloc=&output=embed" 

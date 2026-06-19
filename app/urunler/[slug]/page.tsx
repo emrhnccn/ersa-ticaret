@@ -2,9 +2,8 @@ import { notFound } from 'next/navigation';
 import { products } from '@/lib/data';
 import Link from 'next/link';
 import { ShieldCheck, Truck, Wrench, MessageCircle, ArrowLeft, Tag, CheckCircle2, ChevronRight } from 'lucide-react';
+import ProductCard from '@/components/ProductCard';
 
-// --- TS HATASINI ÇÖZEN KISIM: VERİ TİPİNİ TANIMLIYORUZ ---
-// TypeScript'e "description" kısmının sonundaki "?" işareti ile bunun opsiyonel olduğunu söylüyoruz.
 interface ProductType {
   slug: string;
   title: string;
@@ -16,16 +15,13 @@ interface ProductType {
   description?: string; 
 }
 
-// 1. SEO AYARLARI VE OTOMATİK AÇIKLAMA
 export function generateMetadata({ params }: { params: { slug: string } }) {
-  // 'as ProductType' diyerek TypeScript'e bu verinin bizim kurallarımıza uyduğunu belirtiyoruz
   const product = products.find((p) => p.slug === params.slug) as ProductType | undefined;
   
   if (!product) {
     return { title: 'Ürün Bulunamadı | Ersa Ticaret' };
   }
 
-  // Ürünün açıklaması yoksa (ki scraper ile çekmedik), otomatik şık bir metin oluşturur.
   const descriptionSnippet = product.description 
     ? product.description.substring(0, 100) + '...' 
     : `${product.brand} marka, ${product.category} uyumlu yedek parça. Darıca Ersa Ticaret güvencesiyle anında stoktan teslim.`;
@@ -36,7 +32,6 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   };
 }
 
-// 2. ÜRÜN DETAY SAYFASI TASARIMI
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
   const product = products.find((p) => p.slug === params.slug) as ProductType | undefined;
 
@@ -44,16 +39,20 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     notFound();
   }
 
-  // WhatsApp Sipariş Mesajı Şablonu
+  // İlgili Ürünler: Aynı kategoriden farklı ürünler
+  const relatedProducts = products
+    .filter((p) => p.category === product.category && p.slug !== product.slug)
+    .slice(0, 4);
+
   const whatsappMessage = `Merhaba, Ersa Ticaret sitenizden ürün sipariş etmek/bilgi almak istiyorum.\n\nÜrün Kodu: ${product.code}\nÜrün Adı: ${product.title}\nLink: https://ersaticaret.com/urunler/${product.slug}`;
   const whatsappUrl = `https://wa.me/905525843073?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-20">
       
-      {/* YENİ KOYU TEPE EKRANI (BREADCRUMB - YOL İZİ) */}
+      {/* KOYU TEPE EKRANI (BREADCRUMB) */}
       <div className="bg-slate-900 pt-8 pb-32 relative">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           
           <Link href="/urunler" className="inline-flex items-center text-slate-400 hover:text-white transition-colors mb-6 text-sm font-medium">
@@ -70,7 +69,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         </div>
       </div>
 
-      {/* ÜRÜN DETAY KARTI (YUKARI TAŞMIŞ EFEKT) */}
+      {/* ÜRÜN DETAY KARTI */}
       <div className="max-w-7xl mx-auto px-4 relative z-20 -mt-24 w-full">
         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-2xl shadow-slate-900/5 border border-slate-100 flex flex-col lg:flex-row gap-10 lg:gap-16">
           
@@ -88,7 +87,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             </div>
           </div>
 
-          {/* Sağ Taraf: Ürün Bilgileri ve Sipariş */}
+          {/* Sağ Taraf: Ürün Bilgileri */}
           <div className="w-full lg:w-7/12 flex flex-col">
             
             <div className="flex items-center gap-3 mb-3">
@@ -145,12 +144,29 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-emerald-500/30 active:scale-95 whitespace-nowrap"
               >
-                <MessageCircle size={22} /> WhatsApp'tan Sor
+                <MessageCircle size={22} /> WhatsApp&apos;tan Sor
               </a>
             </div>
 
           </div>
         </div>
+
+        {/* --- YENİ: İLGİLİ ÜRÜNLER BÖLÜMÜ --- */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-extrabold text-slate-900">İlgili Ürünler</h2>
+              <Link href="/urunler" className="text-blue-600 font-semibold hover:text-blue-700 flex items-center gap-1 group text-sm">
+                Tümünü Gör <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {relatedProducts.map((rp) => (
+                <ProductCard key={rp.slug} product={rp} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

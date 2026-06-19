@@ -1,5 +1,6 @@
 'use client';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import { MessageCircle, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -7,8 +8,14 @@ import { useState } from 'react';
 export default function ProductCard({ product }: any) {
   const [imgSrc, setImgSrc] = useState(product.image);
   const { addToCart } = useCart();
+  const { showToast } = useToast();
 
   const waLink = `https://wa.me/905525843073?text=Merhaba,%20${product.title}%20(${product.code})%20parçası%20hakkında%20fiyat%20almak%20istiyorum.`;
+
+  const handleAddToCart = () => {
+    addToCart(product);
+    showToast(`✓ ${product.title} sepete eklendi`);
+  };
 
   return (
     <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 hover:-translate-y-1.5 flex flex-col overflow-hidden">
@@ -59,9 +66,9 @@ export default function ProductCard({ product }: any) {
           <MessageCircle size={16} /> Fiyat Sor
         </a>
 
-        {/* Sepete (Sipariş Listesine) Ekle */}
+        {/* Sepete (Sipariş Listesine) Ekle - Toast ile geri bildirim */}
         <button 
-          onClick={() => addToCart(product)}
+          onClick={handleAddToCart}
           className="py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all duration-300 shadow-lg shadow-blue-600/10 active:scale-95"
         >
           <ShoppingCart size={16} /> Sepete Ekle

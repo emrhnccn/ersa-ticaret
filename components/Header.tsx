@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext'; 
-import { ShoppingCart, Menu, X, Phone } from 'lucide-react';
+import { ShoppingCart, Menu, X, Phone, MessageCircle } from 'lucide-react';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,22 +12,22 @@ export default function Header() {
 
   return (
     
-    <header className="fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 z-50 shadow-lg">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 z-50 shadow-lg" style={{ top: '36px' }}>
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between">
         
-        {/* LOGO VE KURUMSAL YAZI (Yazılar beyaza uyarlandı) */}
+        {/* LOGO VE KURUMSAL YAZI */}
         <Link href="/" className="flex items-center gap-3 shrink-0">
           <img 
             src="/logo.png" 
             alt="Ersa Ticaret Logo" 
-            className="h-9 w-auto object-contain bg-white/10 rounded-md p-1" // Karanlıkta logo daha iyi görünsün diye ufak bir parlama efekti
+            className="h-9 w-auto object-contain bg-white/10 rounded-md p-1"
           />
           <span className="text-xl font-black tracking-tight text-white hidden sm:inline-block">
             ERSA <span className="text-blue-400">TİCARET</span>
           </span>
         </Link>
 
-        {/* MASAÜSTÜ MENÜ (Açık gri yazılar) */}
+        {/* MASAÜSTÜ MENÜ */}
         <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-300">
           <Link href="/" className="hover:text-white transition-colors">Ana Sayfa</Link>
           <Link href="/urunler" className="hover:text-white transition-colors">Ürün Kataloğu</Link>
@@ -46,13 +46,13 @@ export default function Header() {
           >
             <ShoppingCart size={22} />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-900 animate-in zoom-in-50 duration-200">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-900">
                 {cartCount}
               </span>
             )}
           </Link>
 
-          {/* Hızlı Arama Butonu (Karanlık temada parlaması için mavi yapıldı) */}
+          {/* Hızlı Arama Butonu */}
           <a 
             href="tel:+905525843073" 
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/20 whitespace-nowrap"
@@ -87,7 +87,7 @@ export default function Header() {
 
       </div>
 
-      {/* MOBİL MENÜ PANELI (Okunabilirlik için beyaz bırakıldı) */}
+      {/* MOBİL MENÜ PANELI */}
       {isOpen && (
         <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-slate-100 shadow-2xl p-4 flex flex-col gap-2 font-semibold animate-in slide-in-from-top-5 duration-200">
           <Link href="/" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Ana Sayfa</Link>
@@ -96,11 +96,31 @@ export default function Header() {
           <Link href="/kurumsal" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">Mağazamız</Link>
           <Link href="/iletisim" onClick={() => setIsOpen(false)} className="p-3 hover:bg-slate-50 rounded-xl text-slate-700">İletişim</Link>
           
-          <div className="border-t border-slate-100 my-2 pt-2">
+          <div className="border-t border-slate-100 my-2 pt-2 space-y-2">
             <Link href="/sepet" onClick={() => setIsOpen(false)} className="p-3 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-between">
               <span>Sipariş Listem (Sepetim)</span>
               <span className="bg-blue-600 text-white text-xs px-2.5 py-0.5 rounded-full">{cartCount} Ürün</span>
             </Link>
+
+            {/* MOBİL WHATSAPP BUTONU */}
+            <a 
+              href="https://wa.me/905525843073?text=Merhaba,%20bilgi%20almak%20istiyorum."
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsOpen(false)}
+              className="p-3 bg-emerald-50 text-emerald-700 rounded-xl flex items-center gap-2 font-bold"
+            >
+              <MessageCircle size={18} /> WhatsApp ile Yazın
+            </a>
+
+            {/* MOBİL TELEFON BUTONU */}
+            <a 
+              href="tel:+905525843073"
+              onClick={() => setIsOpen(false)}
+              className="p-3 bg-slate-900 text-white rounded-xl flex items-center gap-2 font-bold justify-center"
+            >
+              <Phone size={18} /> Hemen Ara: 0552 584 30 73
+            </a>
           </div>
         </div>
       )}

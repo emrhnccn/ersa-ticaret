@@ -1,22 +1,20 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, RotateCcw, Check, PackageOpen, X } from 'lucide-react';
+import { Search, SlidersHorizontal, RotateCcw, Check, PackageOpen, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { products } from '@/lib/data'; 
+
+const ITEMS_PER_PAGE = 24;
 
 export default function UrunlerPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tümü');
   const [selectedBrand, setSelectedBrand] = useState('Tümü');
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // --- YENİ EKLENEN DİNAMİK SİSTEM ---
-  // products dosyasının içindeki tüm kategorileri tarar, aynı olanları eler (Set) ve otomatik menü oluşturur.
   const categories = ['Tümü', ...Array.from(new Set(products.map(product => product.category)))];
-  
-  // Aynı şekilde çekilen ürünlerin içindeki tüm markaları tarayıp otomatik marka filtresi oluşturur.
   const brands = ['Tümü', ...Array.from(new Set(products.map(product => product.brand).filter(Boolean)))];
-  // ------------------------------------
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -30,11 +28,42 @@ export default function UrunlerPage() {
     });
   }, [searchTerm, selectedCategory, selectedBrand, inStockOnly, products]);
 
+  // Pagination hesaplaması
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Filtre değişince sayfa 1'e dön
+  const handleFilterChange = (setter: Function, value: any) => {
+    setter(value);
+    setCurrentPage(1);
+  };
+
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('Tümü');
     setSelectedBrand('Tümü');
     setInStockOnly(false);
+    setCurrentPage(1);
+  };
+
+  // Sayfa numaralarını hesapla
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        pages.push(i);
+      }
+      if (currentPage < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
   };
 
   return (
@@ -42,7 +71,7 @@ export default function UrunlerPage() {
       
       {/* TEPE (HERO) EKRANI */}
       <div className="bg-slate-900 pt-16 pb-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-blue-500/30">
             <PackageOpen size={32} />
@@ -71,7 +100,7 @@ export default function UrunlerPage() {
                 )}
               </div>
 
-              {/* OTOMATİK KATEGORİLER */}
+              {/* KATEGORİLER */}
               <div className="mb-8">
                 <h3 className="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">Kategoriler</h3>
                 <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
@@ -82,7 +111,7 @@ export default function UrunlerPage() {
                         name="category"
                         className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer" 
                         checked={selectedCategory === cat}
-                        onChange={() => setSelectedCategory(cat as string)}
+                        onChange={() => handleFilterChange(setSelectedCategory, cat)}
                       />
                       <span className={`text-sm font-medium transition-colors ${selectedCategory === cat ? 'text-blue-600 font-bold' : 'text-slate-600 group-hover:text-blue-600'}`}>{cat}</span>
                     </label>
@@ -90,7 +119,7 @@ export default function UrunlerPage() {
                 </div>
               </div>
 
-              {/* OTOMATİK MARKALAR */}
+              {/* MARKALAR */}
               <div className="mb-8">
                 <h3 className="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">Uyumlu Markalar</h3>
                 <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
@@ -101,7 +130,7 @@ export default function UrunlerPage() {
                         name="brand"
                         className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer" 
                         checked={selectedBrand === brand}
-                        onChange={() => setSelectedBrand(brand as string)}
+                        onChange={() => handleFilterChange(setSelectedBrand, brand)}
                       />
                       <span className={`text-sm font-medium transition-colors ${selectedBrand === brand ? 'text-blue-600 font-bold' : 'text-slate-600 group-hover:text-blue-600'}`}>{brand}</span>
                     </label>
@@ -116,7 +145,7 @@ export default function UrunlerPage() {
                   <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${inStockOnly ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 group-hover:border-blue-500'}`}>
                     {inStockOnly && <Check size={14} strokeWidth={3} />}
                   </div>
-                  <input type="checkbox" className="hidden" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
+                  <input type="checkbox" className="hidden" checked={inStockOnly} onChange={(e) => handleFilterChange(setInStockOnly, e.target.checked)} />
                   <span className={`text-sm font-medium transition-colors ${inStockOnly ? 'text-blue-600 font-bold' : 'text-slate-600 group-hover:text-blue-600'}`}>Sadece Stoktakiler</span>
                 </label>
               </div>
@@ -134,26 +163,67 @@ export default function UrunlerPage() {
                 placeholder="Parça adı veya ürün kodu (Örn: OEM-12345) arayın..." 
                 className="w-full bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400 font-medium"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
               {searchTerm && (
-                <button onClick={() => setSearchTerm('')} className="mr-3 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
+                <button onClick={() => { setSearchTerm(''); setCurrentPage(1); }} className="mr-3 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
                   <X size={20} />
                 </button>
               )}
             </div>
 
-            {filteredProducts.length > 0 ? (
+            {paginatedProducts.length > 0 ? (
               <>
-                <div className="mb-4 text-sm font-medium text-slate-500">
-                  Toplam <span className="font-bold text-slate-800">{filteredProducts.length}</span> ürün bulundu
+                <div className="mb-4 text-sm font-medium text-slate-500 flex items-center justify-between">
+                  <span>
+                    Toplam <span className="font-bold text-slate-800">{filteredProducts.length}</span> ürün bulundu
+                    {totalPages > 1 && <span className="text-slate-400 ml-2">• Sayfa {currentPage}/{totalPages}</span>}
+                  </span>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {filteredProducts.map((product) => (
+                  {paginatedProducts.map((product) => (
                     <ProductCard key={product.slug} product={product} />
                   ))}
                 </div>
+
+                {/* SAYFALANDIRMA (PAGİNATİON) */}
+                {totalPages > 1 && (
+                  <div className="mt-12 flex items-center justify-center gap-2 flex-wrap">
+                    {/* Önceki Sayfa */}
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="pagination-btn pagination-btn-inactive disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      <ChevronLeft size={16} /> Önceki
+                    </button>
+
+                    {/* Sayfa Numaraları */}
+                    {getPageNumbers().map((page, i) => (
+                      typeof page === 'number' ? (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentPage(page)}
+                          className={`pagination-btn ${currentPage === page ? 'pagination-btn-active' : 'pagination-btn-inactive'}`}
+                        >
+                          {page}
+                        </button>
+                      ) : (
+                        <span key={i} className="px-2 text-slate-400 text-sm">...</span>
+                      )
+                    ))}
+
+                    {/* Sonraki Sayfa */}
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="pagination-btn pagination-btn-inactive disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      Sonraki <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-sm flex flex-col items-center justify-center h-64">

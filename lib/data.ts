@@ -1568,10 +1568,71 @@ export const services = [
 
 // SEO Uyumlu Teknik Rehber Makaleleri
 export const blogPosts = [
-  { slug: "kombi-bakim-rehberi", title: "Kış Gelmeden Kombi Bakımı Nasıl Yapılmalı?", description: "Kış aylarına girmeden önce kombinizi nasıl hazırlamanız gerektiğine dair hayati ipuçları ve değiştirilmesi gereken filtreler." },
-  { slug: "camasir-makinesi-su-bosaltmiyor", title: "Çamaşır Makinesi Su Boşaltmıyor Ne Yapmalıyım?", description: "Çamaşır makinenizin suyunu boşaltmamasının en yaygın nedenleri, pompa motoru arızası tespiti ve çözüm yolları." },
-  { slug: "bulasik-makinesi-iyi-yikamiyor", title: "Bulaşık Makinesi İyi Yıkamıyor Sorunu ve Çözümü", description: "Bulaşık makineniz bardakları çiziyor veya lekeli bırakıyorsa kontrol etmeniz gereken parçalar ve rezistans sorunları." },
-  { slug: "kombi-su-eksiltiyor", title: "Kombi Su Eksiltiyor (Basınç Düşüyor): Nedenleri", description: "Kombi su basıncı sürekli düşüyorsa genleşme tankı, eşanjör veya emniyet ventili arızası nasıl tespit edilir?" },
-  { slug: "buzdolabi-sogutmuyor", title: "Buzdolabı Alt veya Üst Bölme Soğutmuyor Arızası", description: "No-frost buzdolaplarında soğutma probleminin ana kaynakları (rezistans, fan, sensör arızaları) ve parça seçimi." },
-  { slug: "orijinal-yedek-parca-onemi", title: "Orijinal Yedek Parça Kullanmanın Cihaz Ömrüne Etkisi", description: "Kombi ve beyaz eşya onarımında neden A kalite veya orijinal yedek parça tercih edilmelidir? Merdiven altı parçaların zararları." }
+  { 
+    slug: "kombi-bakim-rehberi", 
+    title: "Kış Gelmeden Kombi Bakımı Nasıl Yapılmalı?", 
+    description: "Kış aylarına girmeden önce kombinizi nasıl hazırlamanız gerektiğine dair hayati ipuçları ve değiştirilmesi gereken filtreler.",
+    content: [
+      { heading: "Neden Kombi Bakımı Önemlidir?", text: "Kombinin düzenli bakımı, cihazın verimini artırır ve doğalgaz tasarrufu sağlar. Bakımsız kombiler %20'ye varan enerji kaybına neden olabilir. Ayrıca yıllık bakım, olası arızaların erken tespit edilmesini sağlayarak büyük masrafları önler." },
+      { heading: "Kış Öncesi Kontrol Listesi", text: "1) Kombi su basıncını kontrol edin (1.0 - 1.5 bar arası olmalı). 2) Radyatörlerin hava yapıp yapmadığını test edin. 3) Genleşme tankının basıncını ölçtürün. 4) Baca bağlantısını ve sızıntı olup olmadığını kontrol edin. 5) Filtreli muslukları temizleyin." },
+      { heading: "Değiştirilmesi Gereken Parçalar", text: "Kombi bakımında en sık değiştirilen parçalar; eşanjör contası, genleşme memranı, 3 yollu vana tamir takımı, sirkülasyon pompası keçesi ve ateşleme elektrodu gibi sarf malzemelerdir. Bu parçaların tamamı Ersa Ticaret'te stokta bulunmaktadır." },
+      { heading: "Profesyonel Bakım Ne Zaman Yaptırılmalı?", text: "Kombinin yıllık bakımı, ısıtma sezonu başlamadan en az 1 ay önce (Eylül-Ekim aylarında) yaptırılmalıdır. Bakım sırasında yetkili servis tarafından yanma analizi yapılması ve CO (karbon monoksit) ölçümü alınması hayati önem taşır." }
+    ]
+  },
+  { 
+    slug: "camasir-makinesi-su-bosaltmiyor", 
+    title: "Çamaşır Makinesi Su Boşaltmıyor Ne Yapmalıyım?", 
+    description: "Çamaşır makinenizin suyunu boşaltmamasının en yaygın nedenleri, pompa motoru arızası tespiti ve çözüm yolları.",
+    content: [
+      { heading: "Sorunun Teşhisi", text: "Çamaşır makineniz sıkma programına geçmiyor ve içinde su kalıyorsa, büyük ihtimalle tahliye (boşaltma) sistemiyle ilgili bir sorun vardır. Bu sorunun birkaç farklı nedeni olabilir ve doğru parçayı değiştirmek sorunu kalıcı olarak çözer." },
+      { heading: "En Yaygın Nedenler", text: "1) Pompa Motoru Arızası: Tahliye pompası zamanla aşınır ve suyu dışarı atamaz. Çalışırken anormal sesler çıkarması bozulma işaretidir. 2) Tıkanmış Filtre: Pompa filtresi madeni para, düğme gibi yabancı cisimlerle tıkanmış olabilir. 3) Tahliye Hortumu Sorunu: Hortum bükülmüş, ezilmiş veya tıkanmış olabilir." },
+      { heading: "Pompa Motoru Değişimi", text: "Pompa filtresi temizlendikten sonra sorun devam ediyorsa, pompa motorunun değiştirilmesi gerekir. Çamaşır makinesi pompası marka ve modele göre farklılık gösterir. Makinenizin marka ve model bilgisini bize iletmeniz halinde tam uyumlu pompayı temin edebiliriz." },
+      { heading: "Önleyici Bakım İpuçları", text: "Her 2-3 ayda bir pompa filtresini kontrol edin ve temizleyin. Yıkama öncesi cepleri kontrol ederek yabancı cisimlerin makineye girmesini önleyin. Tahliye hortumunu düz ve kıvrılmadan yerleştirin." }
+    ]
+  },
+  { 
+    slug: "bulasik-makinesi-iyi-yikamiyor", 
+    title: "Bulaşık Makinesi İyi Yıkamıyor Sorunu ve Çözümü", 
+    description: "Bulaşık makineniz bardakları çiziyor veya lekeli bırakıyorsa kontrol etmeniz gereken parçalar ve rezistans sorunları.",
+    content: [
+      { heading: "Kötü Yıkama Performansının Nedenleri", text: "Bulaşık makinenizin yıkama performansı düşmüşse, bu genellikle mekanik bir arızadan kaynaklanır. Bulaşıklarda beyaz kalıntı, yağlı tabaklar veya çizikler gibi sorunlar, farklı parça arızalarına işaret eder." },
+      { heading: "Kontrol Edilmesi Gereken Parçalar", text: "1) Yıkama Motoru (Sirkülasyon Pompası): Suyu yeterli basınçla püskürtemeyen motor, bulaşıkların temizlenmemesine yol açar. 2) Spray Kolları: Tıkanmış delikler su basıncını düşürür. 3) Rezistans: Suyu yeterince ısıtamayan rezistans, yağlı bulaşıkların temizlenmemesine neden olur." },
+      { heading: "Deterjan Kutusu Arızası", text: "Deterjan kutusu kapağı tam açılmıyorsa, deterjan program sırasında doğru zamanda salınmaz ve yıkama kalitesi düşer. Kayar kapaklı deterjan kutusu mekanizması kolayca değiştirilebilir bir parçadır." },
+      { heading: "Çözüm Yolları", text: "Önce spray kollarını çıkarıp sıcak suyla temizleyin. Tuz ve parlatıcı ayarlarını kontrol edin. Sorun devam ederse yıkama motoru veya rezistans değişimi gerekebilir. Tam uyumlu parçalar için makinenizin modelini WhatsApp'tan bize bildirin." }
+    ]
+  },
+  { 
+    slug: "kombi-su-eksiltiyor", 
+    title: "Kombi Su Eksiltiyor (Basınç Düşüyor): Nedenleri", 
+    description: "Kombi su basıncı sürekli düşüyorsa genleşme tankı, eşanjör veya emniyet ventili arızası nasıl tespit edilir?",
+    content: [
+      { heading: "Su Basıncı Neden Düşer?", text: "Kombide su basıncının sürekli düşmesi, sistemde bir sızıntı veya parça arızası olduğuna işaret eder. Normal çalışma basıncı 1.0-1.5 bar arasında olmalıdır. Manometre ibresi sıfıra yaklaşıyorsa, arıza tespiti yapılmalıdır." },
+      { heading: "Genleşme Tankı Arızası", text: "En yaygın neden genleşme tankının (ekspansiyon tankı) membranının yırtılmasıdır. Tankın alt kısmındaki sibop ucundan su geliyorsa, membran yırtılmış demektir. Membran veya tank komple değiştirilmelidir." },
+      { heading: "Eşanjör Delinmesi", text: "Kombi eşanjörü (ısı değiştirici) kireçlenme nedeniyle delinebilir. Bu durumda kalorifer suyu ile kullanım suyu birbirine karışır. Sıcak su musluğunu açtığınızda basınç artıyor, kapattığınızda düşüyorsa, eşanjör arızasından şüphelenilmelidir." },
+      { heading: "Emniyet Ventili ve Diğer Sebepler", text: "Emniyet ventili (güvenlik supabı) arızalanarak sürekli su boşaltabilir. Ayrıca tesisat bağlantı noktalarında sızıntı, pompa keçesi aşınması veya otomatik hava atma vanası arızası da basınç düşmesine neden olabilir. Parçaların tamamı stoğumuzda mevcuttur." }
+    ]
+  },
+  { 
+    slug: "buzdolabi-sogutmuyor", 
+    title: "Buzdolabı Alt veya Üst Bölme Soğutmuyor Arızası", 
+    description: "No-frost buzdolaplarında soğutma probleminin ana kaynakları (rezistans, fan, sensör arızaları) ve parça seçimi.",
+    content: [
+      { heading: "Sorunun Kaynağını Belirleyin", text: "Buzdolabınız soğutmuyorsa, önce hangi bölmenin etkilendiğini tespit edin. Sadece alt bölme (buzdolabı kısmı) soğutmuyorsa genellikle fan veya damper sorunu vardır. Her iki bölme de soğutmuyorsa kompresör veya gaz kaçağı söz konusu olabilir." },
+      { heading: "No-Frost Rezistans Arızası", text: "No-frost buzdolaplarında en yaygın sorun defrost (buz çözme) rezistansının yanmasıdır. Rezistans çalışmazsa evaporatörde buz birikir ve hava sirkülasyonu durur. Buzdolabı arka duvarında buz tabakası görüyorsanız, rezistans arızası muhtemeldir." },
+      { heading: "Fan Motoru ve Sensör Sorunları", text: "İç fan motoru (evaporatör fanı) arızalandığında soğuk hava bölmeler arasında dolaşamaz. KSU sensörü (karşılıklı soğutma ünitesi sensörü) ise sıcaklık ölçümünü yanlış yaparak kompresörün çalışmasını engeller." },
+      { heading: "Termostat ve Elektronik Kart", text: "Mekanik termostat veya elektronik anakart arızası da soğutma sorunlarına neden olabilir. Buzdolabı anakartları modele özel olup, marka ve model bilgisi ile doğru kartı temin edebilirsiniz. Tüm buzdolabı yedek parçaları stoğumuzda hazırdır." }
+    ]
+  },
+  { 
+    slug: "orijinal-yedek-parca-onemi", 
+    title: "Orijinal Yedek Parça Kullanmanın Cihaz Ömrüne Etkisi", 
+    description: "Kombi ve beyaz eşya onarımında neden A kalite veya orijinal yedek parça tercih edilmelidir? Merdiven altı parçaların zararları.",
+    content: [
+      { heading: "Orijinal vs. Muadil Parça", text: "Orijinal yedek parça (OEM), cihazı üreten firma tarafından üretilen veya onaylanan parçadır. A kalite muadil parçalar ise bağımsız üreticiler tarafından aynı standartlarda üretilir. Her ikisi de güvenle kullanılabilir, ancak merdiven altı (düşük kaliteli) parçalardan kaçınılmalıdır." },
+      { heading: "Kalitesiz Parçaların Riskleri", text: "Düşük kaliteli parçalar; erken arızaya, cihazda ikincil hasara, enerji verimsizliğine ve hatta güvenlik tehlikelerine yol açabilir. Örneğin kalitesiz bir kombi kartı, tüm yanma sistemini bozabilir. Ucuz bir pompa motoru ise su sızıntısına neden olarak cihaza kalıcı hasar verebilir." },
+      { heading: "Garanti ve Güvenilirlik", text: "Orijinal ve A kalite OEM parçalar garanti kapsamındadır. Ersa Ticaret olarak tüm ürünlerimizi güvenilir tedarikçilerden ve yetkili distribütörlerden temin ediyoruz. Satışını yaptığımız her parça kalite kontrolden geçmektedir." },
+      { heading: "Doğru Parçayı Nasıl Seçersiniz?", text: "Parça seçerken cihazınızın marka, model ve üretim yılı bilgilerini hazırlayın. Ürün üzerindeki OEM kodu ile bire bir eşleşen parçayı tercih edin. Emin olamadığınız durumlarda bize cihazınızın fotoğrafını WhatsApp'tan atmanız yeterlidir; doğru parçayı sizin için buluruz." }
+    ]
+  }
 ];
+

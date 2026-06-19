@@ -13,7 +13,7 @@ export default function RehberPage() {
       
       {/* TEPE (HERO) EKRANI */}
       <div className="bg-slate-900 pt-24 pb-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-blue-500/30">
             <BookOpen size={32} />
