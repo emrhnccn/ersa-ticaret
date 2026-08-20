@@ -320,18 +320,15 @@ export const authService = {
             addresses: {
               create: {
                 title: 'Merkez Adres',
-                addressLine: params.addressLine,
+                line1: params.addressLine || 'Merkez Adresi',
                 city: params.city,
                 district: params.district || '',
-                phone: params.phone,
-                type: 'BOTH',
+                isDefault: true,
               }
             },
             currentAccount: {
               create: {
                 creditLimit: 0,
-                currentBalance: 0,
-                availableLimit: 0,
               }
             }
           }

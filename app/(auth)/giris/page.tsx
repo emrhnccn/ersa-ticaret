@@ -32,10 +32,10 @@ export default function GirisPage() {
     const targetPass = customPass || password;
 
     try {
-      const res = await login(targetEmail, targetPass);
+      const res = (await login(targetEmail, targetPass)) as any;
       
       // Admin ise doğrudan /admin paneline, müşteri/bayi ise /hesap paneline yönlendir
-      if (res?.role === 'ADMIN' || targetEmail.toLowerCase().includes('admin')) {
+      if (res?.user?.role === 'ADMIN' || res?.role === 'ADMIN' || targetEmail.toLowerCase().includes('admin')) {
         router.push('/admin');
       } else {
         router.push('/hesap');

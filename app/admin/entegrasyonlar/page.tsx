@@ -37,7 +37,7 @@ export default function SupplierIntegrationsPage() {
   const [loading, setLoading] = useState(true);
   const [syncingCode, setSyncingCode] = useState<string | null>(null);
   const [syncMode, setSyncMode] = useState<string>('FULL');
-  const [limit, setLimit] = useState<string>('50');
+  const [limit, setLimit] = useState<string>('all');
   const [selectedJob, setSelectedJob] = useState<ImportJobInfo | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -75,7 +75,7 @@ export default function SupplierIntegrationsPage() {
         body: JSON.stringify({
           supplierCode,
           mode: syncMode,
-          limit: limit ? parseInt(limit, 10) : undefined,
+          limit: limit && limit !== 'all' ? parseInt(limit, 10) : undefined,
         })
       });
 
@@ -187,11 +187,11 @@ export default function SupplierIntegrationsPage() {
                 onChange={(e) => setLimit(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
               >
-                <option value="10">10 Ürün (Hızlı Test)</option>
-                <option value="50">50 Ürün (Standart Test)</option>
+                <option value="all">🚀 Tüm Ürünler (Limitsiz - Tüm Sayfalar)</option>
+                <option value="500">500 Ürün</option>
                 <option value="200">200 Ürün</option>
-                <option value="1000">1.000 Ürün</option>
-                <option value="5000">Tüm Ürünler (Limitsiz)</option>
+                <option value="50">50 Ürün (Hızlı Test)</option>
+                <option value="10">10 Ürün (Örnek Test)</option>
               </select>
             </div>
 
