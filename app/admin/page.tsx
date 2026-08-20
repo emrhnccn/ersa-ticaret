@@ -184,6 +184,19 @@ export default function AdminDashboardPage() {
             <FileSpreadsheet size={18} />
             <span>Audit Denetim Logları</span>
           </button>
+
+          <Link
+            href="/admin/entegrasyonlar"
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-400 hover:from-amber-500/20 hover:to-orange-500/20 border border-amber-500/30"
+          >
+            <div className="flex items-center gap-3">
+              <span>🔄</span>
+              <span>Tedarikçi Entegrasyonları</span>
+            </div>
+            <span className="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded">
+              3 Canlı
+            </span>
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-slate-800">

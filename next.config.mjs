@@ -13,6 +13,7 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   outputFileTracing: true,
   experimental: {
+    serverComponentsExternalPackages: ['cheerio', 'undici', '@prisma/client', 'prisma'],
     outputFileTracingIncludes: {
       '/**': ['./prisma/**/*', './dev.db', './prisma/dev.db'],
     },
