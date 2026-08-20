@@ -1,7 +1,7 @@
-import { prisma } from '../db';
-import { supplierFactory } from '../../integrations/suppliers/factory';
-import type { RawSupplierProduct, SyncOptions, SyncResult, ImportMode } from '../../integrations/suppliers/types';
-import { Decimal } from '@prisma/client/runtime/library';
+import { prisma } from '@/server/db';
+import { supplierFactory } from '@/integrations/suppliers/factory';
+import type { RawSupplierProduct, SyncOptions, SyncResult, ImportMode } from '@/integrations/suppliers/types';
+import { Prisma } from '@prisma/client';
 
 function slugify(text: string): string {
   const trMap: Record<string, string> = {
@@ -267,8 +267,8 @@ export class SupplierSyncService {
       }
     }
 
-    const supplierPriceDec = raw.supplierPrice != null ? new Decimal(raw.supplierPrice) : null;
-    const stockQtyDec = new Decimal(raw.stockQty || 0);
+    const supplierPriceDec = raw.supplierPrice != null ? new Prisma.Decimal(raw.supplierPrice) : null;
+    const stockQtyDec = new Prisma.Decimal(raw.stockQty || 0);
 
     // 3. YENİ ÜRÜN OLUŞTURMA
     if (!productId) {
@@ -294,12 +294,12 @@ export class SupplierSyncService {
           specsJson: raw.specs ? JSON.stringify(raw.specs) : null,
           status: 'ACTIVE',
           unit: raw.unit || 'ADET',
-          vatRate: new Decimal(20),
+          vatRate: new Prisma.Decimal(20),
           currency: raw.supplierCurrency || 'TRY',
           costPrice,
           salePrice,
           stockQty: stockQtyDec,
-          minOrderQty: new Decimal(raw.minOrderQty || 1),
+          minOrderQty: new Prisma.Decimal(raw.minOrderQty || 1),
           brandId,
           categoryId,
           supplierId,
