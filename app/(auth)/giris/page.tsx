@@ -16,7 +16,7 @@ import {
 
 export default function GirisPage() {
   const router = useRouter();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,12 +28,18 @@ export default function GirisPage() {
     setLoading(true);
     setError(null);
 
-    const targetEmail = customEmail || email;
+    const targetEmail = (customEmail || email).trim();
     const targetPass = customPass || password;
 
     try {
-      await login(targetEmail, targetPass);
-      router.push('/hesap');
+      const res = await login(targetEmail, targetPass);
+      
+      // Admin ise doğrudan /admin paneline, müşteri/bayi ise /hesap paneline yönlendir
+      if (res?.role === 'ADMIN' || targetEmail.toLowerCase().includes('admin')) {
+        router.push('/admin');
+      } else {
+        router.push('/hesap');
+      }
     } catch (err: any) {
       setError(err.message || 'Giriş yapılamadı');
       setLoading(false);
@@ -72,7 +78,7 @@ export default function GirisPage() {
           
           <h2 className="text-xl font-black text-slate-900 mb-1">Hesabınıza Giriş Yapın</h2>
           <p className="text-xs text-slate-500 mb-6">
-            Özel bayi iskonto oranları ve cari hesap yönetimi için giriş yapınız.
+            Özel bayi iskonto oranları, cari hesap ve yönetim için giriş yapınız.
           </p>
 
           {error && (
@@ -135,7 +141,7 @@ export default function GirisPage() {
                 className="p-2.5 bg-slate-900 text-white hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors text-left"
               >
                 <Shield size={14} className="text-amber-400 shrink-0" />
-                <div className="line-clamp-1">Admin Paneli</div>
+                <div className="line-clamp-1">👑 Admin Paneli</div>
               </button>
 
               <button

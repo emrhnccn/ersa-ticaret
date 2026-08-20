@@ -122,13 +122,22 @@ export default function Header() {
             {/* Giriş Yapmış Kullanıcı / Bayi Girişi Linki */}
             {user ? (
               <div className="flex items-center gap-2">
-                <Link
-                  href={isAdmin ? "/admin" : "/hesap"}
-                  className="flex items-center gap-1.5 hover:text-blue-400 font-bold"
-                >
-                  <User size={13} />
-                  <span>{user.name || user.email}</span>
-                </Link>
+                {isAdmin ? (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-black text-xs shadow-md shadow-blue-600/30 transition-all"
+                  >
+                    <span>👑 Admin Paneli</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/hesap"
+                    className="flex items-center gap-1.5 hover:text-blue-400 font-bold"
+                  >
+                    <User size={13} />
+                    <span>{user.name || user.email}</span>
+                  </Link>
+                )}
                 <button
                   onClick={logout}
                   title="Çıkış Yap"

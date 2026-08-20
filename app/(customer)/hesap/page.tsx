@@ -102,6 +102,27 @@ export default function MusteriHesapPage() {
     <div className="min-h-screen bg-slate-50 py-10 px-4">
       <div className="max-w-7xl mx-auto">
         
+        {/* ADMİN BİLGİLENDİRME VE YÖNETİM BUTONU */}
+        {user?.role === 'ADMIN' && (
+          <div className="bg-slate-900 text-white p-5 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-slate-800 shadow-xl mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center font-bold">
+                👑
+              </div>
+              <div>
+                <div className="font-black text-sm text-white">Sistem Yöneticisi (Admin) Hesabı</div>
+                <div className="text-xs text-slate-400">Bayi onayları, cari limitler, fiyat kuralları ve ciro takibi için yönetim paneline geçin.</div>
+              </div>
+            </div>
+            <Link
+              href="/admin"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-lg shadow-blue-600/30 transition-all shrink-0"
+            >
+              Yönetim Paneline Git (Admin Dashboard) →
+            </Link>
+          </div>
+        )}
+
         {/* ÜST BAŞLIK ALANI */}
         <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
