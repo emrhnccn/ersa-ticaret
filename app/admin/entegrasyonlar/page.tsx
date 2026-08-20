@@ -65,6 +65,18 @@ export default function SupplierIntegrationsPage() {
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (syncingCode || jobs.some(j => j.status === 'RUNNING')) {
+      interval = setInterval(() => {
+        fetchDashboardData();
+      }, 3000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [syncingCode, jobs]);
+
   const triggerSync = async (supplierCode: string) => {
     setSyncingCode(supplierCode);
     setNotification(null);

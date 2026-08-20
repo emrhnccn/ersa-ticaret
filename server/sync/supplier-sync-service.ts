@@ -19,6 +19,14 @@ function slugify(text: string): string {
     .replace(/-+/g, '-');
 }
 
+export interface SyncContext {
+  categoryMap: Map<string, string>; // lowerName / slug -> id
+  brandMap: Map<string, string>; // lowerName / slug -> id
+  supplierMappingMap: Map<string, string>; // supplierCategoryName -> targetCategoryId
+  supplierProductMap: Map<string, { id: string; productId: string | null }>; // externalSku -> info
+  productSkuMap: Map<string, string>; // sku / barcode -> productId
+}
+
 export class SupplierSyncService {
   /**
    * Tedarikçinin DB'deki kaydını garanti eder (yoksa açar).
@@ -42,34 +50,90 @@ export class SupplierSyncService {
   }
 
   /**
-   * Kategori eşleştirmesi veya otomatik oluşturma.
+   * Hızlı in-memory önbellek yükleyici. Tek seferde tüm kategori, marka ve mevcut ürün haritalarını çeker.
    */
-  private async resolveCategory(supplierId: string, rawCategoryName?: string | null): Promise<string | null> {
-    if (!rawCategoryName) return null;
+  private async loadSyncContext(supplierId: string): Promise<SyncContext> {
+    const [categories, brands, mappings, supplierProds, prods] = await Promise.all([
+      prisma.category.findMany({ select: { id: true, name: true, slug: true } }),
+      prisma.brand.findMany({ select: { id: true, name: true, slug: true } }),
+      prisma.supplierCategoryMapping.findMany({
+        where: { supplierId },
+        select: { supplierCategoryName: true, targetCategoryId: true }
+      }),
+      prisma.supplierProduct.findMany({
+        where: { supplierId },
+        select: { id: true, externalSku: true, productId: true }
+      }),
+      prisma.product.findMany({
+        select: { id: true, sku: true, barcode: true }
+      })
+    ]);
 
+    const categoryMap = new Map<string, string>();
+    for (const c of categories) {
+      categoryMap.set(c.name.toLowerCase().trim(), c.id);
+      categoryMap.set(c.slug.toLowerCase().trim(), c.id);
+    }
+
+    const brandMap = new Map<string, string>();
+    for (const b of brands) {
+      brandMap.set(b.name.toLowerCase().trim(), b.id);
+      brandMap.set(b.slug.toLowerCase().trim(), b.id);
+    }
+
+    const supplierMappingMap = new Map<string, string>();
+    for (const m of mappings) {
+      if (m.targetCategoryId) {
+        supplierMappingMap.set(m.supplierCategoryName.trim(), m.targetCategoryId);
+      }
+    }
+
+    const supplierProductMap = new Map<string, { id: string; productId: string | null }>();
+    for (const sp of supplierProds) {
+      supplierProductMap.set(sp.externalSku.trim(), { id: sp.id, productId: sp.productId });
+    }
+
+    const productSkuMap = new Map<string, string>();
+    for (const p of prods) {
+      if (p.sku) productSkuMap.set(p.sku.trim(), p.id);
+      if (p.barcode) productSkuMap.set(p.barcode.trim(), p.id);
+    }
+
+    return {
+      categoryMap,
+      brandMap,
+      supplierMappingMap,
+      supplierProductMap,
+      productSkuMap,
+    };
+  }
+
+  /**
+   * Kategori eşleştirmesi veya otomatik oluşturma (Hızlı önbellekli).
+   */
+  private async resolveCategory(
+    supplierId: string,
+    rawCategoryName?: string | null,
+    ctx?: SyncContext
+  ): Promise<string | null> {
+    if (!rawCategoryName) return null;
     const trimmed = rawCategoryName.trim();
     if (!trimmed) return null;
 
-    // 1. Check existing mapping
-    const mapping = await prisma.supplierCategoryMapping.findUnique({
-      where: {
-        supplierId_supplierCategoryName: {
-          supplierId,
-          supplierCategoryName: trimmed,
-        }
-      }
-    });
-
-    if (mapping && mapping.targetCategoryId) {
-      return mapping.targetCategoryId;
+    // 1. Check supplier mapping map
+    if (ctx?.supplierMappingMap.has(trimmed)) {
+      return ctx.supplierMappingMap.get(trimmed)!;
     }
 
-    // 2. Try to find existing category in Ersa database
+    // 2. Check category name / slug map
+    const lower = trimmed.toLowerCase();
     const slug = slugify(trimmed) || 'kategori';
+    if (ctx?.categoryMap.has(lower)) return ctx.categoryMap.get(lower)!;
+    if (ctx?.categoryMap.has(slug)) return ctx.categoryMap.get(slug)!;
+
+    // 3. Fallback or Create in DB
     let cat = await prisma.category.findFirst({
-      where: {
-        OR: [{ name: trimmed }, { slug }]
-      }
+      where: { OR: [{ name: trimmed }, { slug }] }
     });
 
     if (!cat) {
@@ -82,8 +146,14 @@ export class SupplierSyncService {
       });
     }
 
-    // Save mapping for next time
-    await prisma.supplierCategoryMapping.upsert({
+    if (ctx) {
+      ctx.categoryMap.set(lower, cat.id);
+      ctx.categoryMap.set(slug, cat.id);
+      ctx.supplierMappingMap.set(trimmed, cat.id);
+    }
+
+    // Save mapping in background
+    prisma.supplierCategoryMapping.upsert({
       where: {
         supplierId_supplierCategoryName: {
           supplierId,
@@ -97,26 +167,29 @@ export class SupplierSyncService {
         targetCategoryId: cat.id,
         autoApprove: true,
       }
-    });
+    }).catch(() => {});
 
     return cat.id;
   }
 
   /**
-   * Marka eşleştirmesi veya otomatik oluşturma.
+   * Marka eşleştirmesi veya otomatik oluşturma (Hızlı önbellekli).
    */
-  private async resolveBrand(rawBrandName?: string | null): Promise<string | null> {
+  private async resolveBrand(rawBrandName?: string | null, ctx?: SyncContext): Promise<string | null> {
     if (!rawBrandName) return null;
     const trimmed = rawBrandName.trim();
     if (!trimmed || trimmed.toLowerCase() === 'genel' || trimmed.toLowerCase() === 'universal') {
       return null;
     }
 
+    const lower = trimmed.toLowerCase();
     const slug = slugify(trimmed) || 'marka';
+
+    if (ctx?.brandMap.has(lower)) return ctx.brandMap.get(lower)!;
+    if (ctx?.brandMap.has(slug)) return ctx.brandMap.get(slug)!;
+
     let brand = await prisma.brand.findFirst({
-      where: {
-        OR: [{ name: trimmed }, { slug }]
-      }
+      where: { OR: [{ name: trimmed }, { slug }] }
     });
 
     if (!brand) {
@@ -126,6 +199,11 @@ export class SupplierSyncService {
           slug: `${slug}-${Date.now().toString(36)}-${Math.floor(100 + Math.random() * 900)}`,
         }
       });
+    }
+
+    if (ctx) {
+      ctx.brandMap.set(lower, brand.id);
+      ctx.brandMap.set(slug, brand.id);
     }
 
     return brand.id;
@@ -138,51 +216,61 @@ export class SupplierSyncService {
     supplierId: string,
     supplierCode: string,
     raw: RawSupplierProduct,
-    mode: ImportMode = 'FULL'
+    mode: ImportMode = 'FULL',
+    ctx?: SyncContext
   ): Promise<{ action: 'CREATED' | 'UPDATED' | 'SKIPPED'; productId?: string }> {
     const externalSku = raw.externalSku.trim();
     if (!externalSku) {
       throw new Error('Ürünün tedarikçi stok kodu (SKU) boş olamaz.');
     }
 
-    // 1. Tedarikçi Kategori ve Marka Çözümleme
-    const categoryId = await this.resolveCategory(supplierId, raw.subcategory || raw.category);
-    const brandId = await this.resolveBrand(raw.brand);
+    // 1. Kategori ve Marka
+    const categoryId = await this.resolveCategory(supplierId, raw.subcategory || raw.category, ctx);
+    const brandId = await this.resolveBrand(raw.brand, ctx);
 
-    // 2. Mevcut SupplierProduct kaydını kontrol et
-    const existingSupplierProduct = await prisma.supplierProduct.findUnique({
-      where: {
-        supplierId_externalSku: {
-          supplierId,
-          externalSku,
-        }
-      },
-      include: { product: true }
-    });
+    // 2. Mevcut Kaydı Tespit Et
+    let productId: string | null = null;
+    let existingSupplierProductId: string | null = null;
 
-    let productId = existingSupplierProduct?.productId || null;
-
-    // 3. Eğer SupplierProduct yoksa veya bağlı Product yoksa, Ersa veritabanında SKU veya Barkod ile ara
-    if (!productId) {
-      const existingProduct = await prisma.product.findFirst({
-        where: {
-          OR: [
-            { sku: externalSku },
-            { sku: `${supplierCode}-${externalSku}` },
-            ...(raw.barcode ? [{ barcode: raw.barcode }] : [])
-          ]
-        }
+    if (ctx?.supplierProductMap.has(externalSku)) {
+      const cached = ctx.supplierProductMap.get(externalSku)!;
+      productId = cached.productId;
+      existingSupplierProductId = cached.id;
+    } else {
+      const existingSP = await prisma.supplierProduct.findUnique({
+        where: { supplierId_externalSku: { supplierId, externalSku } }
       });
+      if (existingSP) {
+        productId = existingSP.productId;
+        existingSupplierProductId = existingSP.id;
+      }
+    }
 
-      if (existingProduct) {
-        productId = existingProduct.id;
+    // Eğer bağlı Product yoksa, Ersa SKU / Barkod haritasında ara
+    if (!productId) {
+      const generatedSku = `${supplierCode}-${externalSku}`;
+      if (ctx?.productSkuMap.has(externalSku)) productId = ctx.productSkuMap.get(externalSku)!;
+      else if (ctx?.productSkuMap.has(generatedSku)) productId = ctx.productSkuMap.get(generatedSku)!;
+      else if (raw.barcode && ctx?.productSkuMap.has(raw.barcode)) productId = ctx.productSkuMap.get(raw.barcode)!;
+      else {
+        const found = await prisma.product.findFirst({
+          where: {
+            OR: [
+              { sku: externalSku },
+              { sku: generatedSku },
+              ...(raw.barcode ? [{ barcode: raw.barcode }] : [])
+            ]
+          },
+          select: { id: true }
+        });
+        if (found) productId = found.id;
       }
     }
 
     const supplierPriceDec = raw.supplierPrice != null ? new Decimal(raw.supplierPrice) : null;
     const stockQtyDec = new Decimal(raw.stockQty || 0);
 
-    // 4. EĞER ÜRÜN ERSA VERİTABANINDA YOKSA -> OLUŞTUR (Yalnızca FULL veya INCREMENTAL modda)
+    // 3. YENİ ÜRÜN OLUŞTURMA
     if (!productId) {
       if (mode === 'PRICE_ONLY' || mode === 'STOCK_ONLY') {
         return { action: 'SKIPPED' };
@@ -190,9 +278,9 @@ export class SupplierSyncService {
 
       const generatedSku = `${supplierCode}-${externalSku}`;
       const baseSlug = slugify(raw.name) || generatedSku.toLowerCase();
-      const uniqueSlug = `${baseSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const uniqueSlug = `${baseSlug}-${Date.now().toString(36).slice(-4)}-${Math.floor(100 + Math.random() * 900)}`;
 
-      // Ersa satış fiyatını belirle (Varsayılan: Tedarikçi Fiyatı + %25 Kar Marjı)
+      // Satış Fiyatı Hesabı (Tedarikçi Fiyatı + %25 Kar Marjı)
       const costPrice = supplierPriceDec;
       const salePrice = costPrice ? costPrice.mul(1.25) : null;
 
@@ -202,7 +290,7 @@ export class SupplierSyncService {
           name: raw.name,
           slug: uniqueSlug,
           barcode: raw.barcode || null,
-          description: raw.description || `${raw.name} - Orijinal / Yüksek Kaliteli Yedek Parça`,
+          description: raw.description || `${raw.name} - Kaliteli Yedek Parça`,
           specsJson: raw.specs ? JSON.stringify(raw.specs) : null,
           status: 'ACTIVE',
           unit: raw.unit || 'ADET',
@@ -215,29 +303,23 @@ export class SupplierSyncService {
           brandId,
           categoryId,
           supplierId,
+          ...(raw.imageUrls && raw.imageUrls.length > 0 ? {
+            images: {
+              create: raw.imageUrls.slice(0, 5).map((imgUrl, i) => ({
+                url: imgUrl,
+                originalUrl: imgUrl,
+                sourceSupplier: supplierCode,
+                sortOrder: i,
+              }))
+            }
+          } : {})
         }
       });
 
       productId = newProduct.id;
 
-      // Fotoğrafları ekle
-      if (raw.imageUrls && raw.imageUrls.length > 0) {
-        for (let i = 0; i < raw.imageUrls.length; i++) {
-          const imgUrl = raw.imageUrls[i];
-          await prisma.productImage.create({
-            data: {
-              productId: newProduct.id,
-              url: imgUrl,
-              originalUrl: imgUrl,
-              sourceSupplier: supplierCode,
-              sortOrder: i,
-            }
-          });
-        }
-      }
-
-      // SupplierProduct bağlantısını oluştur
-      await prisma.supplierProduct.create({
+      // SupplierProduct kaydı oluştur
+      const createdSP = await prisma.supplierProduct.create({
         data: {
           supplierId,
           productId: newProduct.id,
@@ -253,63 +335,22 @@ export class SupplierSyncService {
           stockStatus: raw.stockStatus || (raw.stockQty && raw.stockQty > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK'),
           specsJson: raw.specs ? JSON.stringify(raw.specs) : null,
           imagesJson: raw.imageUrls ? JSON.stringify(raw.imageUrls) : null,
-          rawPayload: raw.rawPayload ? JSON.stringify(raw.rawPayload) : null,
           lastSyncedAt: new Date(),
         }
       });
 
-      return { action: 'CREATED', productId: newProduct.id };
+      if (ctx) {
+        ctx.supplierProductMap.set(externalSku, { id: createdSP.id, productId: newProduct.id });
+        ctx.productSkuMap.set(generatedSku, newProduct.id);
+        ctx.productSkuMap.set(externalSku, newProduct.id);
+        if (raw.barcode) ctx.productSkuMap.set(raw.barcode, newProduct.id);
+      }
+
+      return { action: 'CREATED', productId };
     }
 
-    // 5. EĞER ÜRÜN ZATEN VARSA -> GÜNCELLE (UPSERT)
-    // SupplierProduct tablosunu güncelle
-    await prisma.supplierProduct.upsert({
-      where: {
-        supplierId_externalSku: {
-          supplierId,
-          externalSku,
-        }
-      },
-      update: {
-        productId,
-        name: raw.name,
-        barcode: raw.barcode || undefined,
-        brandName: raw.brand || undefined,
-        categoryName: raw.category || undefined,
-        subcategoryName: raw.subcategory || undefined,
-        supplierPrice: supplierPriceDec,
-        supplierCurrency: raw.supplierCurrency || 'TRY',
-        stockQty: stockQtyDec,
-        stockStatus: raw.stockStatus || (raw.stockQty && raw.stockQty > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK'),
-        specsJson: raw.specs ? JSON.stringify(raw.specs) : undefined,
-        imagesJson: raw.imageUrls ? JSON.stringify(raw.imageUrls) : undefined,
-        rawPayload: raw.rawPayload ? JSON.stringify(raw.rawPayload) : undefined,
-        lastSyncedAt: new Date(),
-      },
-      create: {
-        supplierId,
-        productId,
-        externalSku,
-        barcode: raw.barcode || null,
-        name: raw.name,
-        brandName: raw.brand || null,
-        categoryName: raw.category || null,
-        subcategoryName: raw.subcategory || null,
-        supplierPrice: supplierPriceDec,
-        supplierCurrency: raw.supplierCurrency || 'TRY',
-        stockQty: stockQtyDec,
-        stockStatus: raw.stockStatus || (raw.stockQty && raw.stockQty > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK'),
-        specsJson: raw.specs ? JSON.stringify(raw.specs) : null,
-        imagesJson: raw.imageUrls ? JSON.stringify(raw.imageUrls) : null,
-        rawPayload: raw.rawPayload ? JSON.stringify(raw.rawPayload) : null,
-        lastSyncedAt: new Date(),
-      }
-    });
-
-    // Ersa Product tablosunu moduna göre güncelle
-    const productUpdateData: any = {
-      updatedAt: new Date(),
-    };
+    // 4. MEVCUT ÜRÜNÜ GÜNCELLEME (FAST UPDATE)
+    const productUpdateData: any = { updatedAt: new Date() };
 
     if (mode === 'FULL' || mode === 'STOCK_ONLY') {
       productUpdateData.stockQty = stockQtyDec;
@@ -332,35 +373,23 @@ export class SupplierSyncService {
       data: productUpdateData,
     });
 
-    // Fotoğrafları kontrol et (yoksa ekle)
-    if ((mode === 'FULL' || mode === 'IMAGE_ONLY') && raw.imageUrls && raw.imageUrls.length > 0) {
-      const existingImages = await prisma.productImage.findMany({
-        where: { productId },
-        select: { originalUrl: true, url: true }
-      });
-      const existingUrls = new Set(existingImages.map(i => i.originalUrl || i.url));
-
-      for (let i = 0; i < raw.imageUrls.length; i++) {
-        const imgUrl = raw.imageUrls[i];
-        if (!existingUrls.has(imgUrl)) {
-          await prisma.productImage.create({
-            data: {
-              productId,
-              url: imgUrl,
-              originalUrl: imgUrl,
-              sourceSupplier: supplierCode,
-              sortOrder: existingImages.length + i,
-            }
-          });
+    if (existingSupplierProductId) {
+      await prisma.supplierProduct.update({
+        where: { id: existingSupplierProductId },
+        data: {
+          supplierPrice: supplierPriceDec,
+          stockQty: stockQtyDec,
+          stockStatus: raw.stockStatus || (raw.stockQty && raw.stockQty > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK'),
+          lastSyncedAt: new Date(),
         }
-      }
+      });
     }
 
     return { action: 'UPDATED', productId };
   }
 
   /**
-   * Tedarikçi için tam senkronizasyon çalıştırma metodu.
+   * Tedarikçi için tam senkronizasyon çalıştırma metodu (Turbo Paralel Motor).
    */
   async runSync(supplierCode: string, options: SyncOptions = {}): Promise<SyncResult> {
     const startTime = new Date();
@@ -393,50 +422,69 @@ export class SupplierSyncService {
     };
 
     try {
-      console.log(`[Sync Engine] Starting ${options.mode || 'FULL'} sync for ${adapter.supplierName}...`);
-      
-      // 1. Fetch raw products
+      console.log(`[Turbo Sync Engine] Starting ${options.mode || 'FULL'} sync for ${adapter.supplierName}...`);
+
+      // 1. Fetch raw products from supplier adapter
       const rawProducts = await adapter.fetchProducts({
         ...options,
-        onProgress: (count) => {
-          // Can emit websocket or console log
-        }
       });
 
       result.total = rawProducts.length;
 
-      // 2. Ingest into database
-      for (const raw of rawProducts) {
-        try {
-          const outcome = await this.upsertProduct(supplierId, adapter.supplierCode, raw, options.mode || 'FULL');
-          if (outcome.action === 'CREATED') result.created++;
-          else if (outcome.action === 'UPDATED') result.updated++;
-          else result.skipped++;
-        } catch (err: any) {
-          result.failed++;
-          result.errors.push({
-            externalSku: raw.externalSku,
-            productName: raw.name,
-            error: err.message,
-          });
+      // 2. Pre-load fast in-memory context (1 roundtrip per table)
+      const ctx = await this.loadSyncContext(supplierId);
 
-          // Log to ImportError table
-          await prisma.importError.create({
-            data: {
-              jobId: job.id,
-              externalSku: raw.externalSku,
-              productName: raw.name,
-              errorMessage: err.message,
-              detailsJson: JSON.stringify(raw),
+      // 3. Process products in parallel chunks of 20
+      const CHUNK_SIZE = 20;
+      for (let i = 0; i < rawProducts.length; i += CHUNK_SIZE) {
+        const chunk = rawProducts.slice(i, i + CHUNK_SIZE);
+        
+        await Promise.all(
+          chunk.map(async (raw) => {
+            try {
+              const outcome = await this.upsertProduct(supplierId, adapter.supplierCode, raw, options.mode || 'FULL', ctx);
+              if (outcome.action === 'CREATED') result.created++;
+              else if (outcome.action === 'UPDATED') result.updated++;
+              else result.skipped++;
+            } catch (err: any) {
+              result.failed++;
+              result.errors.push({
+                externalSku: raw.externalSku,
+                productName: raw.name,
+                error: err.message,
+              });
+
+              prisma.importError.create({
+                data: {
+                  jobId: job.id,
+                  externalSku: raw.externalSku,
+                  productName: raw.name,
+                  errorMessage: err.message,
+                }
+              }).catch(() => {});
             }
-          });
+          })
+        );
+
+        // Periodically update job progress in DB (every 100 items or end)
+        if (i % 100 === 0 || i + CHUNK_SIZE >= rawProducts.length) {
+          prisma.importJob.update({
+            where: { id: job.id },
+            data: {
+              totalItems: result.total,
+              createdItems: result.created,
+              updatedItems: result.updated,
+              skippedItems: result.skipped,
+              failedItems: result.failed,
+            }
+          }).catch(() => {});
         }
       }
 
       result.status = 'COMPLETED';
       result.completedAt = new Date();
 
-      // Update ImportJob record
+      // Final update to ImportJob
       await prisma.importJob.update({
         where: { id: job.id },
         data: {
@@ -451,13 +499,13 @@ export class SupplierSyncService {
         }
       });
 
-      // Update Supplier last synced timestamp
+      // Update Supplier timestamp
       await prisma.supplier.update({
         where: { id: supplierId },
         data: { lastSyncedAt: new Date() }
       });
 
-      console.log(`[Sync Engine] Finished sync for ${adapter.supplierName}. Created: ${result.created}, Updated: ${result.updated}, Failed: ${result.failed}`);
+      console.log(`[Turbo Sync Engine] Finished in ${((Date.now() - startTime.getTime()) / 1000).toFixed(1)}s! Created: ${result.created}, Updated: ${result.updated}, Failed: ${result.failed}`);
 
       return result;
     } catch (err: any) {
