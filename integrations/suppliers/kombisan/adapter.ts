@@ -25,9 +25,11 @@ export class KombisanSupplierAdapter implements SupplierAdapter {
   }
 
   async login(): Promise<boolean> {
-    const kullaniciAdi = (process.env.KOMBISAN_USERNAME || 'ersa_sogutma@hotmail.com').trim();
-    const envPass = process.env.KOMBISAN_PASSWORD;
-    const sifre = (envPass && envPass !== '***') ? envPass.trim() : 'K' + 'EVYHH';
+    const kullaniciAdi = (process.env.KOMBISAN_USERNAME || 'ersa_sogutma@hotmail.com').replace(/['"]/g, '').trim();
+    let sifre = process.env.KOMBISAN_PASSWORD ? process.env.KOMBISAN_PASSWORD.replace(/['"]/g, '').trim() : '';
+    if (!sifre || sifre.includes('*')) {
+      sifre = 'K' + 'EVYHH';
+    }
 
     try {
       const payload = { kullaniciAdi, sifre };

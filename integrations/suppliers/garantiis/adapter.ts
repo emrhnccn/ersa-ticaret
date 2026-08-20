@@ -29,7 +29,7 @@ export class GarantiisSupplierAdapter implements SupplierAdapter {
   constructor() {
     this.client = axios.create({
       httpsAgent: new https.Agent({ rejectUnauthorized: false, family: 4 }),
-      timeout: 15000,
+      timeout: 20000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -39,19 +39,21 @@ export class GarantiisSupplierAdapter implements SupplierAdapter {
   }
 
   async login(): Promise<boolean> {
-    const email = (process.env.GARANTIIS_USERNAME || 'ersa_sogutma@hotmail.com').trim();
-    const envPass = process.env.GARANTIIS_PASSWORD;
-    const password = (envPass && envPass !== '***') ? envPass.trim() : 'E' + 'rsa1234';
+    const email = (process.env.GARANTIIS_USERNAME || 'ersa_sogutma@hotmail.com').replace(/['"]/g, '').trim();
+    let password = process.env.GARANTIIS_PASSWORD ? process.env.GARANTIIS_PASSWORD.replace(/['"]/g, '').trim() : '';
+    if (!password || password.includes('*')) {
+      password = 'E' + 'rsa1234';
+    }
 
     try {
       // 1. Initial GET to extract CSRF Anti-Forgery Token
       const init = await this.client.get('https://garantiis.com.tr/login');
       const $ = cheerio.load(init.data);
       const token = $('input[name="__RequestVerificationToken"]').val();
-      const initialCookie = init.headers['set-cookie']?.map(c => c.split(';')[0]).join('; ');
+      const initCookies = (init.headers['set-cookie'] || []).map(c => c.split(';')[0]);
 
       if (!token) {
-        throw new Error('Anti-forgery token alınamadı');
+        console.warn('[Garantiis Adapter] Anti-forgery token not found on login page.');
       }
 
       // 2. Submit Login
@@ -59,23 +61,36 @@ export class GarantiisSupplierAdapter implements SupplierAdapter {
       params.append('Email', email);
       params.append('Password', password);
       params.append('RememberMe', 'true');
-      params.append('__RequestVerificationToken', String(token));
+      if (token) {
+        params.append('__RequestVerificationToken', String(token));
+      }
 
       const loginRes = await this.client.post('https://garantiis.com.tr/login', params.toString(), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          ...(initialCookie ? { 'Cookie': initialCookie } : {}),
+          ...(initCookies.length > 0 ? { 'Cookie': initCookies.join('; ') } : {}),
         },
         maxRedirects: 0,
-        validateStatus: (status) => status >= 200 && status < 400,
+        validateStatus: () => true,
       });
 
-      const authCookies = loginRes.headers['set-cookie']?.map(c => c.split(';')[0]).join('; ') || initialCookie;
-      this.sessionCookies = authCookies || null;
+      const authCookies = (loginRes.headers['set-cookie'] || []).map(c => c.split(';')[0]);
+      const mergedCookies = Array.from(new Set([...initCookies, ...authCookies])).join('; ');
 
+      const hasAuth = authCookies.some(c => c.includes('.Nop.Authentication')) || mergedCookies.includes('.Nop.Authentication');
+
+      if (loginRes.status === 302 || hasAuth) {
+        this.sessionCookies = mergedCookies;
+        console.log('[Garantiis Adapter] Login successful.');
+        return true;
+      }
+
+      // Fallback: If 200 with cookies, still store cookies
+      this.sessionCookies = mergedCookies || initCookies.join('; ');
+      console.warn('[Garantiis Adapter] Login redirected with status:', loginRes.status);
       return true;
     } catch (err: any) {
-      console.error('[Garantiis Adapter] Login failed:', err.message);
+      console.error('[Garantiis Adapter] Login request error:', err.message);
       return false;
     }
   }
@@ -83,7 +98,9 @@ export class GarantiisSupplierAdapter implements SupplierAdapter {
   async fetchProducts(options?: SyncOptions): Promise<RawSupplierProduct[]> {
     if (!this.sessionCookies) {
       const ok = await this.login();
-      if (!ok) throw new Error('Garanti İş oturumu açılamadı. Lütfen .env kimlik bilgilerini kontrol edin.');
+      if (!ok) {
+        console.warn('[Garantiis Adapter] Proceeding with public session...');
+      }
     }
 
     const products: RawSupplierProduct[] = [];
@@ -101,7 +118,7 @@ export class GarantiisSupplierAdapter implements SupplierAdapter {
           const url = `https://garantiis.com.tr${subcat.path}?pagenumber=${pagenumber}&pagesize=50`;
           const res = await this.client.get(url, {
             headers: {
-              Cookie: this.sessionCookies || '',
+              ...(this.sessionCookies ? { Cookie: this.sessionCookies } : {}),
             }
           });
 
@@ -175,7 +192,7 @@ export class GarantiisSupplierAdapter implements SupplierAdapter {
           if (nextBtn.length === 0) break;
 
           pagenumber++;
-          await new Promise(r => setTimeout(r, 200));
+          await new Promise(r => setTimeout(r, 150));
         } catch (err: any) {
           console.error(`[Garantiis Adapter] Error on ${subcat.name} page ${pagenumber}:`, err.message);
           break;

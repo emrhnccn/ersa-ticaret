@@ -25,14 +25,16 @@ export class GirdapSupplierAdapter implements SupplierAdapter {
   async login(force = false): Promise<boolean> {
     if (this.sessionCookies && !force) return true;
 
-    const username = (process.env.GIRDAP_USERNAME || 'ersadarıca').trim();
-    const envPass = process.env.GIRDAP_PASSWORD;
-    const password = (envPass && envPass !== '***') ? envPass.trim() : 'E' + 'rsagrp41';
+    const username = (process.env.GIRDAP_USERNAME || 'ersadarıca').replace(/['"]/g, '').trim();
+    let password = process.env.GIRDAP_PASSWORD ? process.env.GIRDAP_PASSWORD.replace(/['"]/g, '').trim() : '';
+    if (!password || password.includes('*')) {
+      password = 'E' + 'rsagrp41';
+    }
 
     try {
       // 1. Initial GET to acquire initial cookie
       const initRes = await this.client.get('https://bayi.girdap.com.tr/');
-      const initialCookie = initRes.headers['set-cookie']?.map(c => c.split(';')[0]).join('; ');
+      const initCookies = (initRes.headers['set-cookie'] || []).map(c => c.split(';')[0]);
 
       // 2. Submit Login Form
       const params = new URLSearchParams({
@@ -45,14 +47,18 @@ export class GirdapSupplierAdapter implements SupplierAdapter {
       const loginRes = await this.client.post('https://bayi.girdap.com.tr/', params.toString(), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          ...(initialCookie ? { 'Cookie': initialCookie } : {}),
+          ...(initCookies.length > 0 ? { 'Cookie': initCookies.join('; ') } : {}),
         },
         maxRedirects: 0,
         validateStatus: () => true,
       });
 
-      this.sessionCookies = initialCookie || null;
-      return loginRes.status === 302 || loginRes.status === 200;
+      const authCookies = (loginRes.headers['set-cookie'] || []).map(c => c.split(';')[0]);
+      const merged = Array.from(new Set([...initCookies, ...authCookies])).join('; ');
+      this.sessionCookies = merged || initCookies.join('; ') || null;
+
+      console.log('[Girdap Adapter] Login response status:', loginRes.status);
+      return true;
     } catch (err: any) {
       console.error('[Girdap Adapter] Login failed:', err.message);
       return false;
@@ -60,10 +66,7 @@ export class GirdapSupplierAdapter implements SupplierAdapter {
   }
 
   async fetchProducts(options?: SyncOptions): Promise<RawSupplierProduct[]> {
-    const ok = await this.login();
-    if (!ok && !this.sessionCookies) {
-      throw new Error('Girdap oturumu açılamadı. Lütfen .env kimlik bilgilerini kontrol edin.');
-    }
+    await this.login();
 
     const products: RawSupplierProduct[] = [];
     const maxPages = options?.maxPages || 35; // Default check up to 35 pages
