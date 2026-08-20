@@ -14,16 +14,22 @@ const nextConfig = {
   outputFileTracing: true,
   experimental: {
     serverComponentsExternalPackages: ['cheerio', 'undici', '@prisma/client', 'prisma'],
-    outputFileTracingIncludes: {
-      '/**': ['./prisma/**/*', './dev.db', './prisma/dev.db'],
-    },
   },
   images: {
     remotePatterns: [
+      { protocol: 'https', hostname: 'bayi.girdap.com.tr' },
+      { protocol: 'http', hostname: 'bayi.girdap.com.tr' },
+      { protocol: 'https', hostname: 'garantiis.com.tr' },
+      { protocol: 'https', hostname: 'www.garantiis.com.tr' },
+      { protocol: 'https', hostname: 'cdn.garantiis.com.tr' },
+      { protocol: 'https', hostname: 'kombiklimaparca.com' },
+      { protocol: 'https', hostname: 'www.kombiklimaparca.com' },
+      { protocol: 'https', hostname: 'kombisanstore.com' },
+      { protocol: 'https', hostname: 'www.kombisanstore.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'www.online-yedekparca.com' },
       { protocol: 'https', hostname: 'placehold.co' },
-      { protocol: 'https', hostname: 'api.topuz.com' }
+      { protocol: 'https', hostname: 'api.topuz.com' },
     ],
   },
 };

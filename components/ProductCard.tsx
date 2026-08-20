@@ -60,6 +60,8 @@ export default function ProductCard({ product }: { product: any }) {
           <img
             src={imgSrc}
             alt={product.name || product.title}
+            loading="lazy"
+            decoding="async"
             className="object-contain w-full h-full group-hover:scale-110 transition-transform duration-500 ease-out"
             onError={() => {
               setImgSrc('https://placehold.co/400x400/f8fafc/94a3b8?text=Gorsel+Yok');

@@ -2,6 +2,9 @@ import { prisma } from '../db';
 import { pricingService } from '../pricing/pricing-service';
 import { products as fallbackRawProducts } from '@/lib/data';
 import type { PricingCustomerContext } from '@/shared/types/pricing';
+import * as React from 'react';
+
+const serverCache = typeof React.cache === 'function' ? React.cache : <T extends (...args: any[]) => any>(fn: T): T => fn;
 
 export interface ProductFilterParams {
   search?: string;
@@ -15,6 +18,9 @@ export interface ProductFilterParams {
 }
 
 export const productService = {
+  /**
+   * Optimize edilmiş, `select` kullanan ve Zero N+1 Batch Fiyatlandırma motoruna sahip ürün listeleme fonksiyonu.
+   */
   async getProducts(params: ProductFilterParams, customer?: PricingCustomerContext | null) {
     const page = Math.max(1, params.page || 1);
     const limit = Math.min(100, Math.max(1, params.limit || 24));
@@ -29,9 +35,9 @@ export const productService = {
       if (params.search) {
         const q = params.search.trim();
         where.OR = [
-          { name: { contains: q } },
-          { sku: { contains: q } },
-          { barcode: { contains: q } },
+          { name: { contains: q, mode: 'insensitive' } },
+          { sku: { contains: q, mode: 'insensitive' } },
+          { barcode: { contains: q, mode: 'insensitive' } },
         ];
       }
 
@@ -52,6 +58,7 @@ export const productService = {
       if (params.sortBy === 'price_desc') orderBy = { salePrice: 'desc' };
       if (params.sortBy === 'name_asc') orderBy = { name: 'asc' };
 
+      // Yalnızca gerekli alanları çek (Ağ & Bellek Optimizasyonu)
       const [total, products] = await Promise.all([
         prisma.product.count({ where }),
         prisma.product.findMany({
@@ -59,58 +66,62 @@ export const productService = {
           skip,
           take: limit,
           orderBy,
-          include: {
-            category: true,
-            brand: true,
-            images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            sku: true,
+            barcode: true,
+            salePrice: true,
+            currency: true,
+            vatRate: true,
+            brandId: true,
+            categoryId: true,
+            stockQty: true,
+            minOrderQty: true,
+            unit: true,
+            category: { select: { name: true, slug: true } },
+            brand: { select: { name: true, slug: true } },
+            images: {
+              take: 1,
+              orderBy: { sortOrder: 'asc' },
+              select: { url: true }
+            }
           }
         })
       ]);
 
       if (products.length > 0) {
-        const pricedItems = await Promise.all(
-          products.map(async (p) => {
-            const quote = await pricingService.calculatePrice(
-              {
-                id: p.id,
-                sku: p.sku,
-                salePrice: p.salePrice ? Number(p.salePrice) : null,
-                currency: p.currency,
-                vatRate: Number(p.vatRate),
-                brandId: p.brandId,
-                categoryId: p.categoryId,
-              },
-              customer,
-              1,
-              targetCurrency
-            );
+        // TOPLU FİYATLANDIRMA (0 N+1 QUERY)
+        const pricingInputs = products.map(p => ({
+          id: p.id,
+          sku: p.sku,
+          salePrice: p.salePrice ? Number(p.salePrice) : null,
+          currency: p.currency,
+          vatRate: Number(p.vatRate),
+          brandId: p.brandId,
+          categoryId: p.categoryId,
+        }));
 
-            let specs: Record<string, string> = {};
-            try {
-              if (p.specsJson) specs = JSON.parse(p.specsJson);
-            } catch {}
+        const quotesMap = await pricingService.calculateBatch(pricingInputs, customer, targetCurrency);
 
-            return {
-              id: p.id,
-              slug: p.slug,
-              name: p.name,
-              sku: p.sku,
-              barcode: p.barcode,
-              description: p.description,
-              categoryName: p.category?.name || 'Genel',
-              categorySlug: p.category?.slug || '',
-              brandName: p.brand?.name || 'Genel',
-              brandSlug: p.brand?.slug || '',
-              imageUrl: p.images[0]?.url || 'https://placehold.co/400x400/f8fafc/94a3b8?text=Gorsel+Yok',
-              inStock: Number(p.stockQty) > 0,
-              stockQty: Number(p.stockQty),
-              minOrderQty: Number(p.minOrderQty),
-              unit: p.unit,
-              specs,
-              priceQuote: quote,
-            };
-          })
-        );
+        const pricedItems = products.map(p => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          sku: p.sku,
+          barcode: p.barcode,
+          categoryName: p.category?.name || 'Genel',
+          categorySlug: p.category?.slug || '',
+          brandName: p.brand?.name || 'Genel',
+          brandSlug: p.brand?.slug || '',
+          imageUrl: p.images[0]?.url || 'https://placehold.co/400x400/f8fafc/94a3b8?text=Gorsel+Yok',
+          inStock: Number(p.stockQty) > 0,
+          stockQty: Number(p.stockQty),
+          minOrderQty: Number(p.minOrderQty || 1),
+          unit: p.unit,
+          priceQuote: quotesMap.get(p.id)!,
+        }));
 
         return {
           items: pricedItems,
@@ -139,7 +150,6 @@ export const productService = {
       name: p.title,
       sku: p.code || `OEM-${idx}`,
       barcode: null,
-      description: p.description,
       categoryName: p.category,
       categorySlug: p.category.toLowerCase().replace(/\s+/g, '-'),
       brandName: p.brand || 'Genel',
@@ -149,7 +159,6 @@ export const productService = {
       stockQty: 25,
       minOrderQty: 1,
       unit: 'ADET',
-      specs: { 'Kategori': p.category, 'Marka': p.brand },
       priceQuote: {
         productId: `fallback-${idx}`,
         sku: p.code,
@@ -181,16 +190,19 @@ export const productService = {
     };
   },
 
-  async getProductBySlug(slug: string, customer?: PricingCustomerContext | null, currency: string = 'TRY') {
+  /**
+   * Tek ürün detayını çeker (React cache ile istek bazlı tekilleştirilmiş).
+   */
+  getProductBySlug: serverCache(async (slug: string, customer?: PricingCustomerContext | null, currency: string = 'TRY') => {
     try {
       const product = await prisma.product.findUnique({
         where: { slug },
         include: {
-          category: true,
-          brand: true,
-          images: { orderBy: { sortOrder: 'asc' } },
-          documents: true,
-          variants: true,
+          category: { select: { id: true, name: true, slug: true } },
+          brand: { select: { id: true, name: true, slug: true } },
+          images: { orderBy: { sortOrder: 'asc' }, select: { id: true, url: true, alt: true, sortOrder: true } },
+          documents: { select: { id: true, title: true, url: true } },
+          variants: { select: { id: true, sku: true, name: true, stockQty: true, salePrice: true } },
         }
       });
 
@@ -229,7 +241,7 @@ export const productService = {
           variants: product.variants,
           inStock: Number(product.stockQty) > 0,
           stockQty: Number(product.stockQty),
-          minOrderQty: Number(product.minOrderQty),
+          minOrderQty: Number(product.minOrderQty || 1),
           unit: product.unit,
           specs,
           priceQuote: quote,
@@ -250,8 +262,8 @@ export const productService = {
       sku: fallback.code,
       barcode: null,
       description: fallback.description,
-      category: { name: fallback.category, slug: fallback.category.toLowerCase().replace(/\s+/g, '-') },
-      brand: { name: fallback.brand || 'Genel', slug: (fallback.brand || 'genel').toLowerCase() },
+      category: { id: 'cat-1', name: fallback.category, slug: fallback.category.toLowerCase().replace(/\s+/g, '-') },
+      brand: { id: 'br-1', name: fallback.brand || 'Genel', slug: (fallback.brand || 'genel').toLowerCase() },
       images: [{ id: 'img-1', url: fallback.image, alt: fallback.title, sortOrder: 0 }],
       documents: [],
       variants: [],
@@ -280,13 +292,21 @@ export const productService = {
       },
       relatedProducts: [],
     };
-  },
+  }),
 
-  async getCategories() {
+  /**
+   * Kategorileri çeker (React cache ile istek bazlı tekilleştirilmiş).
+   */
+  getCategories: serverCache(async () => {
     try {
       const cats = await prisma.category.findMany({
         orderBy: { name: 'asc' },
-        include: { _count: { select: { products: true } } }
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          _count: { select: { products: true } }
+        }
       });
       if (cats.length > 0) return cats;
     } catch {}
@@ -298,13 +318,21 @@ export const productService = {
       slug: name.toLowerCase().replace(/\s+/g, '-'),
       _count: { products: 12 }
     }));
-  },
+  }),
 
-  async getBrands() {
+  /**
+   * Markaları çeker (React cache ile istek bazlı tekilleştirilmiş).
+   */
+  getBrands: serverCache(async () => {
     try {
       const brands = await prisma.brand.findMany({
         orderBy: { name: 'asc' },
-        include: { _count: { select: { products: true } } }
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          _count: { select: { products: true } }
+        }
       });
       if (brands.length > 0) return brands;
     } catch {}
@@ -314,6 +342,7 @@ export const productService = {
       id: name.toLowerCase().replace(/\s+/g, '-'),
       name,
       slug: name.toLowerCase().replace(/\s+/g, '-'),
+      _count: { products: 5 }
     }));
-  }
+  })
 };

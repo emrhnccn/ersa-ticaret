@@ -47,6 +47,15 @@ export default function UrunlerPage() {
     }).catch(() => {});
   }, []);
 
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Ürünleri Yükle
   useEffect(() => {
     setLoading(true);
@@ -57,7 +66,7 @@ export default function UrunlerPage() {
       sortBy,
     });
 
-    if (searchTerm) query.set('search', searchTerm);
+    if (debouncedSearch) query.set('search', debouncedSearch);
     if (selectedCategory !== 'Tümü') query.set('category', selectedCategory);
     if (selectedBrand !== 'Tümü') query.set('brand', selectedBrand);
     if (inStockOnly) query.set('inStock', 'true');
@@ -73,7 +82,7 @@ export default function UrunlerPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [currentPage, selectedCategory, selectedBrand, inStockOnly, sortBy, currency, searchTerm]);
+  }, [currentPage, selectedCategory, selectedBrand, inStockOnly, sortBy, currency, debouncedSearch]);
 
   const clearFilters = () => {
     setSearchTerm('');

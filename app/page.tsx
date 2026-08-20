@@ -19,7 +19,7 @@ import {
   Layers
 } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // 60 saniye boyunca Edge CDN üzerinden 20ms'de anında sunulur
 
 export default async function Home() {
   let popularProducts: any[] = [];

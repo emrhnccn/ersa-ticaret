@@ -3,7 +3,7 @@ import { productService } from '@/server/catalog/product-service';
 import { getSessionUser } from '@/server/auth/jwt';
 import ProductDetailClient from './ProductDetailClient';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 120; // 2 dakika boyunca CDN üzerinden anında sunulur
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   try {
