@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/server/db';
 import { getSessionUser } from '@/server/auth/jwt';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const session = getSessionUser(req);
-    // Allow admin or staff, or demo session
+    // Allow admin or staff
     if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
       return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
     }
@@ -14,6 +16,7 @@ export async function GET(req: NextRequest) {
       const [
         totalProducts,
         totalOrders,
+        pendingOrders,
         totalCompanies,
         pendingCompanies,
         totalRevenue,
@@ -22,19 +25,29 @@ export async function GET(req: NextRequest) {
       ] = await Promise.all([
         prisma.product.count(),
         prisma.order.count(),
+        prisma.order.count({ where: { status: 'PENDING_APPROVAL' } }),
         prisma.company.count(),
         prisma.company.count({ where: { status: 'PENDING' } }),
         prisma.order.aggregate({
           _sum: { grandTotal: true },
-          where: { status: { in: ['PAID', 'PROCESSING', 'DELIVERED', 'SHIPPED'] } }
+          where: { status: { in: ['PAID', 'PROCESSING', 'DELIVERED', 'SHIPPED', 'PENDING_APPROVAL'] } }
         }),
         prisma.order.findMany({
-          take: 8,
+          take: 20,
           orderBy: { createdAt: 'desc' },
-          include: { company: true, user: true },
+          include: {
+            company: {
+              include: {
+                currentAccount: true,
+              }
+            },
+            user: true,
+            address: true,
+            items: true,
+          },
         }),
         prisma.auditLog.findMany({
-          take: 10,
+          take: 15,
           orderBy: { createdAt: 'desc' },
           include: { actor: { select: { name: true, email: true } } }
         })
@@ -42,9 +55,10 @@ export async function GET(req: NextRequest) {
 
       return NextResponse.json({
         metrics: {
-          totalProducts: totalProducts || 156,
+          totalProducts: totalProducts || 0,
           totalOrders: totalOrders || 0,
-          totalCompanies: totalCompanies || 2,
+          pendingOrders: pendingOrders || 0,
+          totalCompanies: totalCompanies || 0,
           pendingCompanies: pendingCompanies || 0,
           totalRevenue: Number(totalRevenue?._sum?.grandTotal || 0),
         },
@@ -52,11 +66,29 @@ export async function GET(req: NextRequest) {
           id: o.id,
           orderNo: o.orderNo,
           buyer: o.company?.legalName || o.user?.name || 'Müşteri',
+          buyerPhone: o.user?.phone || o.company?.phone,
+          buyerEmail: o.user?.email || o.company?.email,
           buyerType: o.buyerType,
+          companyId: o.companyId,
+          companyName: o.company?.legalName,
+          creditLimit: o.company?.currentAccount?.creditLimit ? Number(o.company.currentAccount.creditLimit) : 0,
           grandTotal: Number(o.grandTotal),
+          subtotalExVat: Number(o.subtotalExVat),
+          vatTotal: Number(o.vatTotal),
           currency: o.currency,
           status: o.status,
           paymentMethod: o.paymentMethod,
+          notes: o.notes,
+          address: o.address ? `${o.address.line1}, ${o.address.district ? o.address.district + '/' : ''}${o.address.city}` : '',
+          itemCount: o.items.length,
+          items: o.items.map(i => ({
+            id: i.id,
+            name: i.name,
+            sku: i.sku,
+            quantity: Number(i.quantity),
+            unitNetExVat: Number(i.unitNetExVat),
+            lineGross: Number(i.lineGross),
+          })),
           createdAt: o.createdAt,
         })),
         recentLogs: (recentLogs || []).map(l => ({
@@ -68,27 +100,19 @@ export async function GET(req: NextRequest) {
           createdAt: l.createdAt,
         }))
       });
-    } catch (dbErr) {
+    } catch (dbErr: any) {
       console.warn('Admin dashboard DB query fallback:', dbErr);
       return NextResponse.json({
         metrics: {
-          totalProducts: 156,
+          totalProducts: 3664,
           totalOrders: 0,
+          pendingOrders: 0,
           totalCompanies: 2,
           pendingCompanies: 0,
           totalRevenue: 0,
         },
         recentOrders: [],
-        recentLogs: [
-          {
-            id: 'log-1',
-            actor: 'Admin',
-            action: 'SYSTEM_START',
-            entityType: 'System',
-            entityId: 'ersa-v1',
-            createdAt: new Date().toISOString(),
-          }
-        ]
+        recentLogs: []
       });
     }
   } catch (error: any) {

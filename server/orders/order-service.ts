@@ -5,6 +5,7 @@ import { getPaymentGateway } from '@/integrations/payment/factory';
 import { birFaturaAdapter } from '@/integrations/invoicing/birfatura/adapter';
 import { shippingAdapter } from '@/integrations/shipping/adapter';
 import { recordAuditLog } from '../audit/audit-service';
+import { notificationService } from '../notifications/notification-service';
 import type { PricingCustomerContext } from '@/shared/types/pricing';
 
 export interface OrderItemInput {
@@ -56,6 +57,7 @@ export const orderService = {
     let fxRateUsed = 1;
     let fxBaseUsed = 'TRY';
     const orderItemsData: any[] = [];
+    const itemsSummaryList: string[] = [];
 
     for (const item of params.items) {
       const product = await prisma.product.findUnique({
@@ -99,16 +101,18 @@ export const orderService = {
         name: product.name,
         sku: product.sku,
         quantity: item.quantity,
-        unit: product.unit,
+        unit: product.unit || 'ADET',
         currency,
-        fxRate: quote.fxRate,
+        fxRate: fxRateUsed,
         unitNetExVat: quote.unitNetExVat,
-        discountAmt: Number((quote.listUnitNetExVat - quote.unitNetExVat).toFixed(2)),
+        discountAmt: 0,
         vatRate: quote.vatRate,
         vatAmount: quote.vatAmount,
         lineGross: quote.lineGross,
         appliedRules: JSON.stringify(quote.appliedRuleNames),
       });
+
+      itemsSummaryList.push(`• ${product.name} (x${item.quantity}) - ${(quote.lineGross).toLocaleString('tr-TR')} ${currency}`);
     }
 
     subtotalExVat = Number(subtotalExVat.toFixed(2));
@@ -116,11 +120,13 @@ export const orderService = {
     grandTotal = Number(grandTotal.toFixed(2));
 
     // 2. B2B Cari Hesap ödemesi ise Limit Kontrolü
+    let companyLegalName: string | null = null;
     if (params.paymentMethod === 'CURRENT_ACCOUNT') {
       if (!params.companyId) {
         throw new Error('Cari hesap ile ödeme yapabilmek için kurumsal şirket hesabı gereklidir.');
       }
       const cariSummary = await currentAccountService.getAccount(params.companyId);
+      companyLegalName = cariSummary.companyName;
       if (cariSummary.availableLimit < grandTotal) {
         throw new Error(
           `Cari limitiniz bu sipariş için yetersizdir. Kalan kullanılabilir limit: ${cariSummary.availableLimit.toLocaleString('tr-TR')} ₺, Sipariş Tutarı: ${grandTotal.toLocaleString('tr-TR')} ₺`
@@ -131,7 +137,9 @@ export const orderService = {
     // 3. Sipariş Numarası Üret
     const orderNo = `ERS-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(10000 + Math.random() * 90000)}`;
 
-    // 4. Siparişi ve Adresi Transaction ile kaydet
+    // 4. Siparişi ve Adresi Transaction ile kaydet (Cari ödeme durumunda PENDING_APPROVAL)
+    const initialStatus = params.paymentMethod === 'CURRENT_ACCOUNT' ? 'PENDING_APPROVAL' : 'PAYMENT_PENDING';
+
     const order = await prisma.$transaction(async (tx) => {
       // Adres kaydı
       const address = await tx.address.create({
@@ -152,7 +160,7 @@ export const orderService = {
           userId: params.userId || null,
           companyId: params.companyId || null,
           buyerType: params.companyId ? 'B2B' : 'B2C',
-          status: params.paymentMethod === 'CURRENT_ACCOUNT' ? 'PROCESSING' : 'PAYMENT_PENDING',
+          status: initialStatus,
           addressId: address.id,
           currency,
           fxBase: fxBaseUsed,
@@ -167,10 +175,10 @@ export const orderService = {
             create: orderItemsData,
           }
         },
-        include: { items: true, address: true }
+        include: { items: true, address: true, company: true, user: true }
       });
 
-      // Stokları düşür
+      // Stokları düşür / rezerve et
       for (const item of params.items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -186,64 +194,44 @@ export const orderService = {
       action: 'ORDER_CREATED',
       entityType: 'Order',
       entityId: order.id,
-      afterJson: JSON.stringify({ orderNo, grandTotal, paymentMethod: params.paymentMethod }),
+      afterJson: JSON.stringify({ orderNo, grandTotal, paymentMethod: params.paymentMethod, status: initialStatus }),
     });
 
-    // 5. Cari Hesap İse Deftere Borç Yaz ve Otomatik Fatura/Kargo Oluştur
-    if (params.paymentMethod === 'CURRENT_ACCOUNT' && params.companyId) {
-      await currentAccountService.recordTransaction({
-        companyId: params.companyId,
-        type: 'DEBIT',
-        amount: grandTotal,
-        orderId: order.id,
-        note: `Sipariş #${order.orderNo} Cari Borç Kaydı`,
-        actorId: params.actorId || params.userId,
-      });
+    // 5. Bildirimleri Gönder (E-Posta & WhatsApp)
+    const notifData = {
+      orderId: order.id,
+      orderNo: order.orderNo,
+      recipientName: params.address.recipientName,
+      recipientPhone: params.address.recipientPhone,
+      recipientEmail: order.user?.email || order.company?.email,
+      companyName: order.company?.legalName || companyLegalName,
+      grandTotal,
+      currency,
+      paymentMethod: params.paymentMethod,
+      status: initialStatus,
+      itemCount: params.items.length,
+      itemsSummary: itemsSummaryList.join('<br>'),
+      addressSummary: `${params.address.line1}, ${params.address.district ? params.address.district + '/' : ''}${params.address.city}`,
+    };
 
-      // Otomatik e-Fatura oluştur
-      await birFaturaAdapter.createInvoice({
-        orderId: order.id,
-        orderNo: order.orderNo,
-        buyerName: params.address.recipientName,
-        taxNo: params.address.taxNo,
-        taxOffice: params.address.taxOffice,
-        email: params.userId ? 'musteri@ersaticaret.com' : 'misafir@ersaticaret.com',
-        address: params.address.line1,
-        city: params.address.city,
-        items: order.items.map(i => ({
-          name: i.name,
-          sku: i.sku,
-          quantity: Number(i.quantity),
-          unitPriceExVat: Number(i.unitNetExVat),
-          vatRate: Number(i.vatRate),
-          vatAmount: Number(i.vatAmount),
-          totalGross: Number(i.lineGross),
-        })),
-        subtotalExVat,
-        vatTotal,
-        grandTotal,
-        currency,
-      });
+    try {
+      await notificationService.sendOrderEmail(notifData, 'CREATED');
+      await notificationService.sendOrderWhatsApp(notifData, 'CREATED');
+    } catch (notifErr: any) {
+      console.warn('[Order Notification Warning]:', notifErr.message);
+    }
 
-      // Otomatik Kargo oluştur
-      await shippingAdapter.createShipment({
-        orderId: order.id,
-        recipientName: params.address.recipientName,
-        recipientPhone: params.address.recipientPhone,
-        address: params.address.line1,
-        city: params.address.city,
-        district: params.address.district,
-      });
-
+    // 6. Cari Hesap İse Yönetici Onayına Beklet
+    if (params.paymentMethod === 'CURRENT_ACCOUNT') {
       return {
         order,
         paymentUrl: null,
-        status: 'PROCESSING',
-        message: 'Siparişiniz cari hesabınızdan onaylanmış ve hazırlanmaya başlanmıştır.',
+        status: 'PENDING_APPROVAL',
+        message: 'Siparişiniz cari hesap ile oluşturulmuştur. Yönetici onayının ardından hazırlanmaya başlanacaktır.',
       };
     }
 
-    // 6. Kredi Kartı İse Sanal POS Ödeme Başlat
+    // 7. Kredi Kartı İse Sanal POS Ödeme Başlat
     if (params.paymentMethod === 'CREDIT_CARD') {
       const pos = getPaymentGateway();
       const posResponse = await pos.initiatePayment({
@@ -254,7 +242,7 @@ export const orderService = {
         amount: grandTotal,
         currency,
         customerName: params.address.recipientName,
-        customerEmail: 'musteri@ersaticaret.com',
+        customerEmail: order.user?.email || 'musteri@ersaticaret.com',
         customerPhone: params.address.recipientPhone,
         billingAddress: {
           line1: params.address.line1,
@@ -274,6 +262,154 @@ export const orderService = {
     }
 
     return { order, status: order.status };
+  },
+
+  /**
+   * Yönetici Cari Siparişini Onaylar
+   */
+  async approveOrder(orderId: string, adminUserId?: string) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true, address: true, company: true, user: true },
+    });
+
+    if (!order) {
+      throw new Error('Sipariş bulunamadı.');
+    }
+
+    if (order.status !== 'PENDING_APPROVAL') {
+      throw new Error(`Sipariş durumu onaya uygun değil. Mevcut durum: ${order.status}`);
+    }
+
+    const grandTotal = Number(order.grandTotal);
+
+    // 1. Cari Deftere Borç Yaz
+    if (order.companyId) {
+      await currentAccountService.recordTransaction({
+        companyId: order.companyId,
+        type: 'DEBIT',
+        amount: grandTotal,
+        orderId: order.id,
+        note: `Sipariş #${order.orderNo} Yönetici Onaylı Cari Borç Kaydı`,
+        actorId: adminUserId,
+      });
+    }
+
+    // 2. Sipariş Durumunu PROCESSING yap
+    const updatedOrder = await prisma.order.update({
+      where: { id: order.id },
+      data: { status: 'PROCESSING' },
+      include: { items: true, address: true, company: true, user: true },
+    });
+
+    // 3. Otomatik e-Fatura ve Kargo
+    try {
+      if (order.address) {
+        await birFaturaAdapter.createInvoice({
+          orderId: order.id,
+          orderNo: order.orderNo,
+          buyerName: order.company?.legalName || order.user?.name || 'Müşteri',
+          taxNo: order.company?.taxNo,
+          taxOffice: order.company?.taxOffice,
+          email: order.company?.email || order.user?.email || '',
+          address: order.address.line1,
+          city: order.address.city,
+          items: order.items.map(i => ({
+            name: i.name,
+            sku: i.sku,
+            quantity: Number(i.quantity),
+            unitPriceExVat: Number(i.unitNetExVat),
+            vatRate: Number(i.vatRate),
+            vatAmount: Number(i.vatAmount),
+            totalGross: Number(i.lineGross),
+          })),
+          subtotalExVat: Number(order.subtotalExVat),
+          vatTotal: Number(order.vatTotal),
+          grandTotal: Number(order.grandTotal),
+          currency: order.currency,
+        });
+
+        await shippingAdapter.createShipment({
+          orderId: order.id,
+          recipientName: order.company?.legalName || order.user?.name || 'Alıcı',
+          recipientPhone: order.user?.phone || order.company?.phone || '05525843073',
+          address: order.address.line1,
+          city: order.address.city,
+          district: order.address.district || undefined,
+        });
+      }
+    } catch (e: any) {
+      console.warn('[Invoice/Shipping Auto Trigger Notice]:', e.message);
+    }
+
+    // 4. Onay Bildirimi Gönder
+    const notifData = {
+      orderId: order.id,
+      orderNo: order.orderNo,
+      recipientName: order.user?.name || order.company?.legalName || 'Müşteri',
+      recipientPhone: order.user?.phone || order.company?.phone,
+      recipientEmail: order.user?.email || order.company?.email,
+      companyName: order.company?.legalName,
+      grandTotal,
+      currency: order.currency,
+      paymentMethod: order.paymentMethod || 'CURRENT_ACCOUNT',
+      status: 'PROCESSING',
+      itemCount: order.items.length,
+      itemsSummary: order.items.map(i => `${i.name} (x${i.quantity})`).join(', '),
+      addressSummary: order.address ? `${order.address.line1}, ${order.address.city}` : '',
+    };
+
+    try {
+      await notificationService.sendOrderEmail(notifData, 'APPROVED');
+      await notificationService.sendOrderWhatsApp(notifData, 'APPROVED');
+    } catch {}
+
+    await recordAuditLog({
+      actorId: adminUserId,
+      action: 'ORDER_APPROVED_BY_ADMIN',
+      entityType: 'Order',
+      entityId: order.id,
+      afterJson: JSON.stringify({ orderNo: order.orderNo, status: 'PROCESSING' }),
+    });
+
+    return updatedOrder;
+  },
+
+  /**
+   * Yönetici Siparişi Reddeder
+   */
+  async rejectOrder(orderId: string, adminUserId?: string, reason?: string) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true, company: true, user: true },
+    });
+
+    if (!order) throw new Error('Sipariş bulunamadı.');
+
+    // Stokları iade et
+    for (const item of order.items) {
+      if (item.productId) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: { stockQty: { increment: item.quantity } }
+        });
+      }
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id: order.id },
+      data: { status: 'CANCELLED' },
+    });
+
+    await recordAuditLog({
+      actorId: adminUserId,
+      action: 'ORDER_REJECTED_BY_ADMIN',
+      entityType: 'Order',
+      entityId: order.id,
+      afterJson: JSON.stringify({ orderNo: order.orderNo, status: 'CANCELLED', reason }),
+    });
+
+    return updatedOrder;
   },
 
   async completePaidOrder(orderId: string, paymentRef: string) {

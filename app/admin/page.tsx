@@ -28,11 +28,13 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const { user, isAdmin, loading: authLoading, logout } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'companies' | 'rules' | 'products' | 'audit'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'companies' | 'rules' | 'products' | 'audit'>('overview');
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [companies, setCompanies] = useState<any[]>([]);
   const [priceRules, setPriceRules] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Yeni Fiyat Kuralı Ekleme Form State
@@ -46,6 +48,53 @@ export default function AdminDashboardPage() {
   // Şirket Düzenleme State
   const [editingCompany, setEditingCompany] = useState<any>(null);
   const [newCreditLimit, setNewCreditLimit] = useState('');
+
+  const handleApproveOrder = async (orderId: string) => {
+    if (!confirm('Bu cari siparişi onaylamak istiyor musunuz?\n\n• Cari hesaba borç işlenecektir.\n• e-Fatura ve kargo süreci başlatılacaktır.\n• Müşteriye ve Ersa yetkilisine WhatsApp/E-posta bildirimi gidecektir.')) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/v1/admin/orders/${orderId}/approve`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ ' + data.message);
+        loadData();
+        setSelectedOrder(null);
+      } else {
+        alert('❌ Onaylama hatası: ' + data.error);
+      }
+    } catch (e: any) {
+      alert('İstek hatası: ' + e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectOrder = async (orderId: string) => {
+    const reason = prompt('Siparişi reddetme sebebi:', 'Cari limit aşımı / Stok yetersizliği');
+    if (reason === null) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/v1/admin/orders/${orderId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('ℹ️ ' + data.message);
+        loadData();
+        setSelectedOrder(null);
+      } else {
+        alert('❌ Reddetme hatası: ' + data.error);
+      }
+    } catch (e: any) {
+      alert('İstek hatası: ' + e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -144,6 +193,21 @@ export default function AdminDashboardPage() {
           >
             <LayoutDashboard size={18} />
             <span>Kontrol Paneli</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${activeTab === 'orders' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+          >
+            <div className="flex items-center gap-3">
+              <Package size={18} />
+              <span>Siparişler &amp; Cari Onay</span>
+            </div>
+            {metrics.pendingOrders > 0 && (
+              <span className="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                {metrics.pendingOrders} Onay
+              </span>
+            )}
           </button>
 
           <button
@@ -298,9 +362,18 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Son Siparişler Tablosu */}
-              <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden">
+              <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
                 <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-                  <h3 className="font-black text-white text-base">Son Gelen Siparişler</h3>
+                  <div>
+                    <h3 className="font-black text-white text-base">Son Gelen Siparişler &amp; Cari Onayları</h3>
+                    <p className="text-xs text-slate-400">Canlı sipariş akışı, cari bakiye onayları ve durum takibi</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className="text-xs text-blue-400 hover:text-blue-300 font-bold"
+                  >
+                    Tümünü Gör →
+                  </button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
@@ -312,31 +385,96 @@ export default function AdminDashboardPage() {
                         <th className="p-4">Ödeme Yöntemi</th>
                         <th className="p-4">Durum</th>
                         <th className="p-4 text-right">Tutar</th>
+                        <th className="p-4 text-right">İşlemler</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
-                      {dashboardData?.recentOrders?.map((o: any) => (
-                        <tr key={o.id} className="hover:bg-slate-800/50">
-                          <td className="p-4 font-mono font-bold text-blue-400">#{o.orderNo}</td>
-                          <td className="p-4 font-bold text-white">{o.buyer}</td>
-                          <td className="p-4">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${o.buyerType === 'B2B' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
-                              {o.buyerType}
-                            </span>
-                          </td>
-                          <td className="p-4 text-slate-300 font-medium">
-                            {o.paymentMethod === 'CURRENT_ACCOUNT' ? 'Cari Hesap' : 'Sanal POS'}
-                          </td>
-                          <td className="p-4">
-                            <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg font-black uppercase text-[10px]">
-                              {o.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right font-black text-white">
-                            {o.grandTotal.toLocaleString('tr-TR')} {o.currency}
+                      {(!dashboardData?.recentOrders || dashboardData.recentOrders.length === 0) ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-slate-500 font-medium">
+                            Henüz verilmiş bir sipariş bulunmamaktadır.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        dashboardData?.recentOrders?.map((o: any) => (
+                          <tr key={o.id} className="hover:bg-slate-800/50 transition">
+                            <td className="p-4 font-mono font-bold text-blue-400">#{o.orderNo}</td>
+                            <td className="p-4">
+                              <div className="font-bold text-white">{o.buyer}</div>
+                              {o.buyerPhone && <div className="text-[11px] text-slate-400">{o.buyerPhone}</div>}
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${o.buyerType === 'B2B' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'}`}>
+                                {o.buyerType}
+                              </span>
+                            </td>
+                            <td className="p-4 text-slate-300 font-medium">
+                              {o.paymentMethod === 'CURRENT_ACCOUNT' ? (
+                                <span className="font-bold text-amber-400">💳 Cari Hesap</span>
+                              ) : (
+                                <span>💳 Sanal POS</span>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              {o.status === 'PENDING_APPROVAL' ? (
+                                <span className="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg font-black uppercase text-[10px] animate-pulse flex items-center gap-1 w-fit">
+                                  <span>⏳</span> Cari Onay Bekliyor
+                                </span>
+                              ) : o.status === 'PROCESSING' ? (
+                                <span className="px-2.5 py-1 bg-blue-500/20 text-blue-400 rounded-lg font-black uppercase text-[10px]">
+                                  📦 Hazırlanıyor
+                                </span>
+                              ) : o.status === 'SHIPPED' ? (
+                                <span className="px-2.5 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg font-black uppercase text-[10px]">
+                                  🚚 Kargoda
+                                </span>
+                              ) : o.status === 'CANCELLED' ? (
+                                <span className="px-2.5 py-1 bg-rose-500/20 text-rose-400 rounded-lg font-black uppercase text-[10px]">
+                                  ❌ İptal
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg font-black uppercase text-[10px]">
+                                  ✅ {o.status}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4 text-right font-black text-white">
+                              {o.grandTotal.toLocaleString('tr-TR')} {o.currency}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {o.status === 'PENDING_APPROVAL' && (
+                                  <>
+                                    <button
+                                      disabled={actionLoading}
+                                      onClick={() => handleApproveOrder(o.id)}
+                                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[11px] transition shadow-md shadow-emerald-600/20"
+                                      title="Cari Siparişi Onayla"
+                                    >
+                                      ✓ Onayla
+                                    </button>
+                                    <button
+                                      disabled={actionLoading}
+                                      onClick={() => handleRejectOrder(o.id)}
+                                      className="px-2.5 py-1 bg-rose-600/80 hover:bg-rose-600 text-white font-bold rounded-lg text-[11px] transition"
+                                      title="Siparişi Reddet"
+                                    >
+                                      ✕ Reddet
+                                    </button>
+                                  </>
+                                )}
+                                <button
+                                  onClick={() => setSelectedOrder(o)}
+                                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs"
+                                  title="Detay İncele"
+                                >
+                                  👁️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -345,7 +483,138 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* 2. B2B ŞİRKETLER & BAYİLER */}
+          {/* 2. SİPARİŞLER VE CARİ ONAY YÖNETİMİ SEKMESİ */}
+          {activeTab === 'orders' && (
+            <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden space-y-6">
+              <div className="p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                <div>
+                  <h3 className="font-black text-white text-base flex items-center gap-2">
+                    <span>📦 B2B &amp; B2C Sipariş Yönetimi</span>
+                    {metrics.pendingOrders > 0 && (
+                      <span className="px-2.5 py-0.5 bg-amber-500 text-slate-950 text-xs font-black rounded-full">
+                        {metrics.pendingOrders} Cari Onay Bekliyor
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-slate-400">Tüm siparişlerin kontrolü, cari limit onayları, e-Fatura ve kargo takibi</p>
+                </div>
+                <button
+                  onClick={loadData}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700"
+                >
+                  🔄 Yenile
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-950/60 border-b border-slate-800 text-slate-400 font-bold uppercase">
+                      <th className="p-4">Sipariş No</th>
+                      <th className="p-4">Tarih</th>
+                      <th className="p-4">Alıcı / Şirket</th>
+                      <th className="p-4">Tür</th>
+                      <th className="p-4">Ödeme Yöntemi</th>
+                      <th className="p-4">Durum</th>
+                      <th className="p-4 text-right">Tutar</th>
+                      <th className="p-4 text-right">Onay / İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {(!dashboardData?.recentOrders || dashboardData.recentOrders.length === 0) ? (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-slate-500 font-medium">
+                          Henüz verilmiş bir sipariş bulunmamaktadır.
+                        </td>
+                      </tr>
+                    ) : (
+                      dashboardData?.recentOrders?.map((o: any) => (
+                        <tr key={o.id} className="hover:bg-slate-800/50 transition">
+                          <td className="p-4 font-mono font-bold text-blue-400">#{o.orderNo}</td>
+                          <td className="p-4 text-slate-400">
+                            {new Date(o.createdAt).toLocaleString('tr-TR')}
+                          </td>
+                          <td className="p-4">
+                            <div className="font-bold text-white">{o.buyer}</div>
+                            {o.buyerPhone && <div className="text-[11px] text-slate-400">{o.buyerPhone}</div>}
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${o.buyerType === 'B2B' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'}`}>
+                              {o.buyerType}
+                            </span>
+                          </td>
+                          <td className="p-4 text-slate-300 font-medium">
+                            {o.paymentMethod === 'CURRENT_ACCOUNT' ? (
+                              <span className="font-bold text-amber-400">💳 Cari Hesap</span>
+                            ) : (
+                              <span>💳 Sanal POS</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {o.status === 'PENDING_APPROVAL' ? (
+                              <span className="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg font-black uppercase text-[10px] animate-pulse flex items-center gap-1 w-fit">
+                                <span>⏳</span> Cari Onay Bekliyor
+                              </span>
+                            ) : o.status === 'PROCESSING' ? (
+                              <span className="px-2.5 py-1 bg-blue-500/20 text-blue-400 rounded-lg font-black uppercase text-[10px]">
+                                📦 Hazırlanıyor
+                              </span>
+                            ) : o.status === 'SHIPPED' ? (
+                              <span className="px-2.5 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg font-black uppercase text-[10px]">
+                                🚚 Kargoda
+                              </span>
+                            ) : o.status === 'CANCELLED' ? (
+                              <span className="px-2.5 py-1 bg-rose-500/20 text-rose-400 rounded-lg font-black uppercase text-[10px]">
+                                ❌ İptal
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg font-black uppercase text-[10px]">
+                                ✅ {o.status}
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4 text-right font-black text-white">
+                            {o.grandTotal.toLocaleString('tr-TR')} {o.currency}
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {o.status === 'PENDING_APPROVAL' && (
+                                <>
+                                  <button
+                                    disabled={actionLoading}
+                                    onClick={() => handleApproveOrder(o.id)}
+                                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition shadow-md shadow-emerald-600/20"
+                                  >
+                                    ✓ Onayla
+                                  </button>
+                                  <button
+                                    disabled={actionLoading}
+                                    onClick={() => handleRejectOrder(o.id)}
+                                    className="px-2.5 py-1 bg-rose-600/80 hover:bg-rose-600 text-white font-bold rounded-lg text-xs transition"
+                                  >
+                                    ✕ Reddet
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => setSelectedOrder(o)}
+                                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs"
+                                title="Detay İncele"
+                              >
+                                👁️ Detay
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 3. B2B ŞİRKETLER & BAYİLER */}
           {activeTab === 'companies' && (
             <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden space-y-6">
               <div className="p-6 border-b border-slate-800 flex justify-between items-center">
@@ -618,6 +887,135 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* SİPARİŞ DETAY VE ONAY MODALI */}
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 rounded-3xl p-6 md:p-8 max-w-2xl w-full border border-slate-800 shadow-2xl space-y-6">
+            <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-black text-white font-mono">#{selectedOrder.orderNo}</h3>
+                  <span className={`px-2.5 py-0.5 rounded text-[11px] font-black uppercase ${
+                    selectedOrder.status === 'PENDING_APPROVAL'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse'
+                      : 'bg-blue-500/20 text-blue-400'
+                  }`}>
+                    {selectedOrder.status === 'PENDING_APPROVAL' ? '⏳ Cari Onay Bekliyor' : selectedOrder.status}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Oluşturulma: {new Date(selectedOrder.createdAt).toLocaleString('tr-TR')}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="text-slate-400 hover:text-white font-bold p-2 text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Müşteri & Firma Bilgileri */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs">
+              <div>
+                <div className="text-slate-400 font-bold mb-1">Alıcı &amp; Firma:</div>
+                <div className="font-bold text-white">{selectedOrder.buyer}</div>
+                {selectedOrder.buyerPhone && (
+                  <div className="text-slate-300 mt-0.5 flex items-center gap-2">
+                    <span>📞 {selectedOrder.buyerPhone}</span>
+                    <a
+                      href={`https://api.whatsapp.com/send?phone=${selectedOrder.buyerPhone.replace(/\D/g, '')}&text=Merhaba%20${encodeURIComponent(selectedOrder.buyer)},%20%23${selectedOrder.orderNo}%20numarali%20siparisiniz%20hakkinda:`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold"
+                    >
+                      💬 WhatsApp
+                    </a>
+                  </div>
+                )}
+              </div>
+              <div>
+                <div className="text-slate-400 font-bold mb-1">Ödeme &amp; Cari Limit:</div>
+                <div className="font-bold text-amber-400">
+                  {selectedOrder.paymentMethod === 'CURRENT_ACCOUNT' ? 'Cari Hesap (Açık Hesap)' : 'Sanal POS'}
+                </div>
+                {selectedOrder.creditLimit > 0 && (
+                  <div className="text-slate-300 mt-0.5">
+                    Kayıtlı Limit: {selectedOrder.creditLimit.toLocaleString('tr-TR')} ₺
+                  </div>
+                )}
+              </div>
+              {selectedOrder.address && (
+                <div className="sm:col-span-2 pt-2 border-t border-slate-800/80">
+                  <div className="text-slate-400 font-bold mb-0.5">Teslimat Adresi:</div>
+                  <div className="text-slate-300">{selectedOrder.address}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Sipariş Kalemleri */}
+            <div>
+              <div className="text-xs font-bold text-slate-300 mb-2">Sipariş İçeriği:</div>
+              <div className="bg-slate-950 rounded-2xl border border-slate-800 divide-y divide-slate-800/60 max-h-52 overflow-y-auto text-xs">
+                {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                  selectedOrder.items.map((item: any) => (
+                    <div key={item.id} className="p-3 flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-white">{item.name}</div>
+                        <div className="text-[11px] text-slate-400 font-mono">SKU: {item.sku} • Adet: {item.quantity}</div>
+                      </div>
+                      <div className="font-bold text-emerald-400">
+                        {item.lineGross?.toLocaleString('tr-TR')} {selectedOrder.currency}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-slate-500">Ürün detayı bulunamadı</div>
+                )}
+              </div>
+            </div>
+
+            {/* Alt Toplam & Aksiyonlar */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-slate-800">
+              <div className="text-left">
+                <div className="text-xs text-slate-400">Genel Toplam (KDV Dahil):</div>
+                <div className="text-xl font-black text-emerald-400">
+                  {selectedOrder.grandTotal.toLocaleString('tr-TR')} {selectedOrder.currency}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {selectedOrder.status === 'PENDING_APPROVAL' ? (
+                  <>
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => handleRejectOrder(selectedOrder.id)}
+                      className="flex-1 sm:flex-initial px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition"
+                    >
+                      ✕ Reddet
+                    </button>
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => handleApproveOrder(selectedOrder.id)}
+                      className="flex-1 sm:flex-initial px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl transition shadow-lg shadow-emerald-600/30"
+                    >
+                      ✓ Cari Siparişi Onayla
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setSelectedOrder(null)}
+                    className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl"
+                  >
+                    Kapat
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -13,9 +13,18 @@ export type AuditInput = {
 
 export async function writeAuditLog(input: AuditInput) {
   try {
+    let validActorId: string | null = null;
+    if (input.actorId) {
+      const userExists = await prisma.user.findUnique({
+        where: { id: input.actorId },
+        select: { id: true },
+      });
+      if (userExists) validActorId = userExists.id;
+    }
+
     await prisma.auditLog.create({
       data: {
-        actorId: input.actorId || null,
+        actorId: validActorId,
         action: input.action,
         entityType: input.entityType,
         entityId: input.entityId,
