@@ -2,7 +2,7 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
   dest: "public",
-  disable: true, // Geliştirme aşamasında şimdilik tamamen kapatıyoruz ki hata almayalım
+  disable: true,
   register: true,
   skipWaiting: true,
 });
@@ -11,13 +11,18 @@ const withPWA = withPWAInit({
 const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
-  
+  outputFileTracing: true,
+  experimental: {
+    outputFileTracingIncludes: {
+      '/**': ['./prisma/**/*', './dev.db', './prisma/dev.db'],
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'www.online-yedekparca.com' },
       { protocol: 'https', hostname: 'placehold.co' },
-      { protocol: 'https', hostname: 'api.topuz.com' } // Gelecekteki bot için şimdiden açtık
+      { protocol: 'https', hostname: 'api.topuz.com' }
     ],
   },
 };
