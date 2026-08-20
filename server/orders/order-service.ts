@@ -268,13 +268,19 @@ export const orderService = {
    * Yönetici Cari Siparişini Onaylar
    */
   async approveOrder(orderId: string, adminUserId?: string) {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { id: orderId },
+          { orderNo: orderId }
+        ]
+      },
       include: { items: true, address: true, company: true, user: true },
     });
 
     if (!order) {
-      throw new Error('Sipariş bulunamadı.');
+      console.error(`[Approve Order Error] Order not found for identifier: ${orderId}`);
+      throw new Error(`Sipariş bulunamadı. (Sipariş ID / No: ${orderId})`);
     }
 
     if (order.status !== 'PENDING_APPROVAL') {
@@ -379,12 +385,20 @@ export const orderService = {
    * Yönetici Siparişi Reddeder
    */
   async rejectOrder(orderId: string, adminUserId?: string, reason?: string) {
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { id: orderId },
+          { orderNo: orderId }
+        ]
+      },
       include: { items: true, company: true, user: true },
     });
 
-    if (!order) throw new Error('Sipariş bulunamadı.');
+    if (!order) {
+      console.error(`[Reject Order Error] Order not found for identifier: ${orderId}`);
+      throw new Error(`Sipariş bulunamadı. (Sipariş ID / No: ${orderId})`);
+    }
 
     // Stokları iade et
     for (const item of order.items) {
