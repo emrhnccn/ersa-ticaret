@@ -339,46 +339,46 @@ export default function SupplierIntegrationsPage() {
             </button>
           </div>
 
-          {/* 3. KOMBISAN */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-purple-500/50 transition">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+          {/* 3. KOMBI KLIMA PARCA */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-emerald-500/50 transition">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
 
             <div>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-center text-2xl">
-                    🚀
+                  <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center text-2xl">
+                    ❄️
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Kombisan Store B4B</h3>
-                    <p className="text-xs text-slate-400 font-mono">api.kombisanstore.com</p>
+                    <h3 className="text-lg font-bold text-white">Kombi Klima Parça</h3>
+                    <p className="text-xs text-slate-400 font-mono">kombiklimaparca.com</p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-full text-xs font-semibold">
-                  REST API
+                <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-semibold">
+                  WooCommerce API
                 </span>
               </div>
 
               <p className="text-xs text-slate-400 mb-4 line-clamp-2">
-                Uludem B4B doğrudan REST JSON API bağlantısı ile yüksek hızlı kombi yedek parça ve OEM kodlu ürün aktarımı.
+                WordPress & WooCommerce Store REST API doğrudan bağlantısı ile kombi & klima yedek parçaları kataloğu.
               </p>
 
               <div className="bg-slate-950/60 rounded-xl p-3.5 border border-slate-800/80 space-y-2 mb-6 text-xs">
                 <div className="flex justify-between text-slate-400">
                   <span>Entegrasyon Türü:</span>
-                  <span className="font-semibold text-slate-200">High-Speed REST API Client</span>
+                  <span className="font-semibold text-slate-200">WooCommerce REST Store API</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Kayıtlı Ürün:</span>
-                  <span className="font-bold text-purple-400">
-                    {suppliers.find(s => s.code === 'KOMBISAN')?.productCount || 0} Adet
+                  <span className="font-bold text-emerald-400">
+                    {suppliers.find(s => s.code === 'KOMBIKLIMAPARCA')?.productCount || 0} Adet
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Son Senkronizasyon:</span>
                   <span className="font-mono text-slate-300">
-                    {suppliers.find(s => s.code === 'KOMBISAN')?.lastSyncedAt
-                      ? new Date(suppliers.find(s => s.code === 'KOMBISAN')!.lastSyncedAt!).toLocaleString('tr-TR')
+                    {suppliers.find(s => s.code === 'KOMBIKLIMAPARCA')?.lastSyncedAt
+                      ? new Date(suppliers.find(s => s.code === 'KOMBIKLIMAPARCA')!.lastSyncedAt!).toLocaleString('tr-TR')
                       : 'Henüz yapılmadı'}
                   </span>
                 </div>
@@ -386,21 +386,21 @@ export default function SupplierIntegrationsPage() {
             </div>
 
             <button
-              onClick={() => triggerSync('KOMBISAN')}
+              onClick={() => triggerSync('KOMBIKLIMAPARCA')}
               disabled={syncingCode !== null}
               className={`w-full py-2.5 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 ${
-                syncingCode === 'KOMBISAN'
-                  ? 'bg-purple-600/50 text-white cursor-wait'
-                  : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20'
+                syncingCode === 'KOMBIKLIMAPARCA'
+                  ? 'bg-emerald-600/50 text-white cursor-wait'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
               }`}
             >
-              {syncingCode === 'KOMBISAN' ? (
+              {syncingCode === 'KOMBIKLIMAPARCA' ? (
                 <>
                   <span className="animate-spin">⏳</span> Aktarılıyor...
                 </>
               ) : (
                 <>
-                  <span>⚡</span> Kombisan'ı Şimdi Senkronize Et
+                  <span>⚡</span> Kombi Klima Parça'yı Şimdi Senkronize Et
                 </>
               )}
             </button>

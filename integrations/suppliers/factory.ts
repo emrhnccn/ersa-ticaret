@@ -2,6 +2,7 @@ import type { SupplierAdapter } from './types';
 import { girdapAdapter } from './girdap/adapter';
 import { garantiisAdapter } from './garantiis/adapter';
 import { kombisanAdapter } from './kombisan/adapter';
+import { kombiKlimaParcaAdapter } from './kombiklimaparca/adapter';
 
 class SupplierFactory {
   private adapters = new Map<string, SupplierAdapter>();
@@ -9,6 +10,7 @@ class SupplierFactory {
   constructor() {
     this.register(girdapAdapter);
     this.register(garantiisAdapter);
+    this.register(kombiKlimaParcaAdapter);
     this.register(kombisanAdapter);
   }
 
