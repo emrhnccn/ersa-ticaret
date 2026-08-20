@@ -30,35 +30,45 @@ export function verifyToken(token: string): TokenPayload | null {
 }
 
 export function setAuthCookie(token: string) {
-  const cookieStore = cookies();
-  cookieStore.set(TOKEN_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 gün
-  });
+  try {
+    const cookieStore = cookies();
+    cookieStore.set(TOKEN_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 gün
+    });
+  } catch (e) {
+    console.warn('Cookie set error:', e);
+  }
 }
 
 export function clearAuthCookie() {
-  const cookieStore = cookies();
-  cookieStore.set(TOKEN_COOKIE_NAME, '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-  });
+  try {
+    const cookieStore = cookies();
+    cookieStore.set(TOKEN_COOKIE_NAME, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+    });
+  } catch (e) {
+    console.warn('Cookie clear error:', e);
+  }
 }
 
 export function getTokenFromRequest(req?: NextRequest): string | null {
   if (req) {
-    const authHeader = req.headers.get('authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      return authHeader.substring(7);
-    }
-    const cookieToken = req.cookies.get(TOKEN_COOKIE_NAME)?.value;
-    if (cookieToken) return cookieToken;
+    try {
+      const authHeader = req.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        return authHeader.substring(7);
+      }
+      const cookieToken = req.cookies.get(TOKEN_COOKIE_NAME)?.value;
+      if (cookieToken) return cookieToken;
+    } catch {}
   }
 
   try {
@@ -70,7 +80,11 @@ export function getTokenFromRequest(req?: NextRequest): string | null {
 }
 
 export function getSessionUser(req?: NextRequest): TokenPayload | null {
-  const token = getTokenFromRequest(req);
-  if (!token) return null;
-  return verifyToken(token);
+  try {
+    const token = getTokenFromRequest(req);
+    if (!token) return null;
+    return verifyToken(token);
+  } catch {
+    return null;
+  }
 }

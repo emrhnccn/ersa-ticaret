@@ -19,18 +19,27 @@ import {
   Layers
 } from 'lucide-react';
 
-export default async function Home() {
-  const session = getSessionUser();
-  const customerContext = session ? {
-    userId: session.userId,
-    companyId: session.companyId || undefined,
-    customerGroupId: session.customerGroupId || undefined,
-  } : null;
+export const dynamic = 'force-dynamic';
 
-  const { items: popularProducts } = await productService.getProducts(
-    { limit: 8, sortBy: 'newest' },
-    customerContext
-  );
+export default async function Home() {
+  let popularProducts: any[] = [];
+
+  try {
+    const session = getSessionUser();
+    const customerContext = session ? {
+      userId: session.userId,
+      companyId: session.companyId || undefined,
+      customerGroupId: session.customerGroupId || undefined,
+    } : null;
+
+    const res = await productService.getProducts(
+      { limit: 8, sortBy: 'newest' },
+      customerContext
+    );
+    if (res && res.items) popularProducts = res.items;
+  } catch (error) {
+    console.error('Home product load error:', error);
+  }
 
   const testimonials = [
     {
@@ -127,7 +136,7 @@ export default async function Home() {
               className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-blue-600/30 active:scale-95 text-base"
             >
               <Package size={20} />
-              Kataloğu İncele ({popularProducts.length}+ Parça)
+              Kataloğu İncele
             </Link>
 
             <Link
@@ -172,32 +181,34 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* --- POPÜLER PARÇALAR BÖLÜMÜ (CANLI PRICING ENGINE) --- */}
-      <section className="pb-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col sm:flex-row justify-between items-end mb-8 gap-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
-                <Sparkles size={14} /> Stoktaki Parçalar
+      {/* --- POPÜLER PARÇALAR BÖLÜMÜ --- */}
+      {popularProducts.length > 0 && (
+        <section className="pb-20 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-col sm:flex-row justify-between items-end mb-8 gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                  <Sparkles size={14} /> Stoktaki Parçalar
+                </div>
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900">Öne Çıkan Yedek Parçalar</h2>
+                <p className="text-slate-500 text-xs mt-1">Fiyatlar <strong>KDV Hariçtir</strong>. Bayi girişi yaparak özel iskontolu fiyatlarınızı görebilirsiniz.</p>
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-slate-900">Öne Çıkan Yedek Parçalar</h2>
-              <p className="text-slate-500 text-xs mt-1">Fiyatlar <strong>KDV Hariçtir</strong>. Bayi girişi yaparak özel iskontolu fiyatlarınızı görebilirsiniz.</p>
+              <Link
+                href="/urunler"
+                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group bg-blue-50 px-4 py-2 rounded-xl"
+              >
+                Tüm Kataloğu Gör <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
-            <Link
-              href="/urunler"
-              className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group bg-blue-50 px-4 py-2 rounded-xl"
-            >
-              Tüm Kataloğu Gör <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {popularProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {popularProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* --- ÇALIŞTIĞIMIZ MARKALAR --- */}
       <section className="py-16 bg-white border-y border-slate-200/80">
