@@ -3,6 +3,7 @@ import { supplierSyncService } from '@/server/sync/supplier-sync-service';
 import type { ImportMode } from '@/integrations/suppliers/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Vercel serverless execution timeout (60 saniye)
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const result = await supplierSyncService.runSync(supplierCode.toUpperCase(), {
       mode: mode as ImportMode,
-      limit: limit ? parseInt(limit, 10) : undefined,
+      limit: limit && limit !== 'all' ? parseInt(limit, 10) : undefined,
       maxPages: maxPages ? parseInt(maxPages, 10) : undefined,
     });
 
