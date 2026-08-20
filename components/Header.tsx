@@ -70,12 +70,8 @@ export default function Header() {
       <div className="bg-slate-950/80 border-b border-slate-800/80 px-4 py-1.5 text-xs text-slate-300">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
-          {/* Sol: İletişim & B2B Fiyat Bilgisi */}
+          {/* Sol: İletişim Bilgileri */}
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-1.5 text-amber-400 font-medium">
-              <Sparkles size={13} />
-              <span>Tüm fiyatlar <strong>KDV Hariçtir</strong> (+%20 KDV)</span>
-            </div>
             <div className="flex items-center gap-3 text-slate-400">
               <a href="tel:+905525843073" className="hover:text-white flex items-center gap-1">
                 <Phone size={12} className="text-blue-400" /> 0552 584 30 73

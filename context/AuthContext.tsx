@@ -38,22 +38,45 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const USER_STORAGE_KEY = 'ersa_authenticated_user';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(USER_STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem(USER_STORAGE_KEY);
+    }
+    return true;
+  });
 
   const fetchCurrentUser = async () => {
     try {
       const res = await fetch('/api/v1/auth/me');
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user || null);
-      } else {
-        setUser(null);
+        if (data.user) {
+          setUser(data.user);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+          }
+        } else {
+          setUser(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(USER_STORAGE_KEY);
+          }
+        }
       }
     } catch {
-      setUser(null);
+      // Keep existing local user on temporary network glitch
     } finally {
       setLoading(false);
     }
@@ -74,11 +97,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(data.error || 'Giriş başarısız');
     }
     setUser(data.user);
+    if (typeof window !== 'undefined' && data.user) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+    }
   };
 
   const logout = async () => {
-    await fetch('/api/v1/auth/logout', { method: 'POST' });
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST' });
+    } catch {}
     setUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(USER_STORAGE_KEY);
+    }
   };
 
   const isB2B = user?.role === 'B2B_CUSTOMER' || user?.role === 'DEALER' || user?.role === 'WHOLESALER';

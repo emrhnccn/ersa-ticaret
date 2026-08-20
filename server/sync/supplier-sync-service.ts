@@ -109,7 +109,7 @@ export class SupplierSyncService {
   }
 
   /**
-   * Kategori eşleştirmesi veya otomatik oluşturma (Hızlı önbellekli).
+   * Kategori eşleştirmesi veya otomatik oluşturma (Hızlı önbellekli & Tekilleştirilmiş).
    */
   private async resolveCategory(
     supplierId: string,
@@ -127,20 +127,27 @@ export class SupplierSyncService {
 
     // 2. Check category name / slug map
     const lower = trimmed.toLowerCase();
-    const slug = slugify(trimmed) || 'kategori';
+    const cleanSlug = slugify(trimmed) || 'kategori';
     if (ctx?.categoryMap.has(lower)) return ctx.categoryMap.get(lower)!;
-    if (ctx?.categoryMap.has(slug)) return ctx.categoryMap.get(slug)!;
+    if (ctx?.categoryMap.has(cleanSlug)) return ctx.categoryMap.get(cleanSlug)!;
 
-    // 3. Fallback or Create in DB
+    // 3. Atomik Upsert (Yarış durumlarını ve mükerrer kayıtları %100 önler)
     let cat = await prisma.category.findFirst({
-      where: { OR: [{ name: trimmed }, { slug }] }
+      where: {
+        OR: [
+          { slug: cleanSlug },
+          { name: { equals: trimmed, mode: 'insensitive' } }
+        ]
+      }
     });
 
     if (!cat) {
-      cat = await prisma.category.create({
-        data: {
+      cat = await prisma.category.upsert({
+        where: { slug: cleanSlug },
+        update: {},
+        create: {
           name: trimmed,
-          slug: `${slug}-${Date.now().toString(36)}-${Math.floor(100 + Math.random() * 900)}`,
+          slug: cleanSlug,
           vatRate: 20,
         }
       });
@@ -148,7 +155,8 @@ export class SupplierSyncService {
 
     if (ctx) {
       ctx.categoryMap.set(lower, cat.id);
-      ctx.categoryMap.set(slug, cat.id);
+      ctx.categoryMap.set(cleanSlug, cat.id);
+      ctx.categoryMap.set(trimmed, cat.id);
       ctx.supplierMappingMap.set(trimmed, cat.id);
     }
 
@@ -173,7 +181,7 @@ export class SupplierSyncService {
   }
 
   /**
-   * Marka eşleştirmesi veya otomatik oluşturma (Hızlı önbellekli).
+   * Marka eşleştirmesi veya otomatik oluşturma (Hızlı önbellekli & Tekilleştirilmiş).
    */
   private async resolveBrand(rawBrandName?: string | null, ctx?: SyncContext): Promise<string | null> {
     if (!rawBrandName) return null;
@@ -183,27 +191,35 @@ export class SupplierSyncService {
     }
 
     const lower = trimmed.toLowerCase();
-    const slug = slugify(trimmed) || 'marka';
+    const cleanSlug = slugify(trimmed) || 'marka';
 
     if (ctx?.brandMap.has(lower)) return ctx.brandMap.get(lower)!;
-    if (ctx?.brandMap.has(slug)) return ctx.brandMap.get(slug)!;
+    if (ctx?.brandMap.has(cleanSlug)) return ctx.brandMap.get(cleanSlug)!;
 
     let brand = await prisma.brand.findFirst({
-      where: { OR: [{ name: trimmed }, { slug }] }
+      where: {
+        OR: [
+          { slug: cleanSlug },
+          { name: { equals: trimmed, mode: 'insensitive' } }
+        ]
+      }
     });
 
     if (!brand) {
-      brand = await prisma.brand.create({
-        data: {
+      brand = await prisma.brand.upsert({
+        where: { slug: cleanSlug },
+        update: {},
+        create: {
           name: trimmed,
-          slug: `${slug}-${Date.now().toString(36)}-${Math.floor(100 + Math.random() * 900)}`,
+          slug: cleanSlug,
         }
       });
     }
 
     if (ctx) {
       ctx.brandMap.set(lower, brand.id);
-      ctx.brandMap.set(slug, brand.id);
+      ctx.brandMap.set(cleanSlug, brand.id);
+      ctx.brandMap.set(trimmed, brand.id);
     }
 
     return brand.id;
