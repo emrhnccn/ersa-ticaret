@@ -346,8 +346,6 @@ export default function Header() {
             {/* Hızlı Menü Linkleri */}
             <Link href="/" className="hover:text-blue-400 py-3 transition-colors">Ana Sayfa</Link>
             <Link href="/urunler" className="hover:text-blue-400 py-3 transition-colors">Yedek Parça Kataloğu</Link>
-            <Link href="/urunler?category=kombi-karti" className="hover:text-blue-400 py-3 transition-colors">Kombi Kartları</Link>
-            <Link href="/urunler?category=camasir-makinesi" className="hover:text-blue-400 py-3 transition-colors">Beyaz Eşya Parçaları</Link>
             <Link href="/rehber" className="hover:text-blue-400 py-3 transition-colors">Teknik Rehber</Link>
             <Link href="/kurumsal" className="hover:text-blue-400 py-3 transition-colors">Hakkımızda</Link>
             <Link href="/iletisim" className="hover:text-blue-400 py-3 transition-colors">İletişim</Link>

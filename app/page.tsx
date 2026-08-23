@@ -5,19 +5,11 @@ import { productService } from '@/server/catalog/product-service';
 import { getSessionUser } from '@/server/auth/jwt';
 import {
   ChevronRight,
-  Cpu,
-  Wrench,
-  Truck,
-  Award,
   Package,
-  Users,
-  Timer,
-  ShieldCheck,
   Phone,
   MessageCircle,
   Building2,
-  Sparkles,
-  Layers
+  Sparkles
 } from 'lucide-react';
 
 export const revalidate = 60; // 60 saniye boyunca Edge CDN üzerinden 20ms'de anında sunulur
@@ -154,40 +146,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* --- HİZMETLER BÖLÜMÜ --- */}
-      <section className="relative z-30 -mt-20 px-4 max-w-7xl mx-auto mb-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden group">
-            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-blue-600 group-hover:text-white transition-all">
-              <Cpu size={26} />
-            </div>
-            <h3 className="text-lg font-black text-slate-900 mb-2">Kombi Elektronik Kart</h3>
-            <p className="text-slate-500 text-xs leading-relaxed">Vaillant, Bosch, Demirdöküm, E.C.A, Baykan ve tüm markalar için sıfır ve garantili anakart tedariği.</p>
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden group">
-            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-              <Wrench size={26} />
-            </div>
-            <h3 className="text-lg font-black text-slate-900 mb-2">Beyaz Eşya Parçaları</h3>
-            <p className="text-slate-500 text-xs leading-relaxed">Çamaşır makinesi, buzdolabı, bulaşık makinesi pompaları, rezistanslar ve ventil grupları.</p>
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden group">
-            <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-amber-600 group-hover:text-white transition-all">
-              <Truck size={26} />
-            </div>
-            <h3 className="text-lg font-black text-slate-900 mb-2">B2B Bayi &amp; Servis Ağı</h3>
-            <p className="text-slate-500 text-xs leading-relaxed">Bölgedeki teknik servislere özel iskonto oranları, vadeli cari hesap ve anında depodan sevkiyat.</p>
-          </div>
-
-        </div>
-      </section>
-
       {/* --- POPÜLER PARÇALAR BÖLÜMÜ --- */}
       {popularProducts.length > 0 && (
-        <section className="pb-20 bg-slate-50">
+        <section className="pt-8 pb-20 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-end mb-8 gap-4">
               <div>
