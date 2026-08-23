@@ -78,13 +78,43 @@ export default function AdminDashboardPage() {
     imageUrl: '',
   });
 
-  // Yeni Fiyat Kuralı Ekleme Form State
-  const [showAddRuleModal, setShowAddRuleModal] = useState(false);
-  const [ruleName, setRuleName] = useState('');
-  const [ruleType, setRuleType] = useState('GROUP_PERCENT');
-  const [ruleGroupId, setRuleGroupId] = useState('GROUP_A');
-  const [ruleDiscount, setRuleDiscount] = useState('15');
-  const [rulePriority, setRulePriority] = useState('5');
+  // B2B Fiyat Kuralı Yönetim State'leri
+  const [ruleLookup, setRuleLookup] = useState<{
+    companies: any[];
+    customerGroups: any[];
+    categories: any[];
+    brands: any[];
+    products: any[];
+  }>({
+    companies: [],
+    customerGroups: [],
+    categories: [],
+    brands: [],
+    products: [],
+  });
+  const [showRuleModal, setShowRuleModal] = useState(false);
+  const [editingRule, setEditingRule] = useState<any>(null);
+  const [ruleSearch, setRuleSearch] = useState('');
+  const [ruleScopeFilter, setRuleScopeFilter] = useState('ALL');
+  const [modalProductSearch, setModalProductSearch] = useState('');
+  const [ruleForm, setRuleForm] = useState({
+    id: '',
+    name: '',
+    type: 'CUSTOMER_CATEGORY',
+    companyId: '',
+    customerGroupId: '',
+    categoryId: '',
+    brandId: '',
+    productId: '',
+    valueType: 'PERCENT', // 'PERCENT' | 'SPECIAL_PRICE'
+    discountPercent: '20',
+    specialPrice: '',
+    priority: '2',
+    minQty: '1',
+    validFrom: '',
+    validTo: '',
+    active: true,
+  });
 
   // Şirket Düzenleme State
   const [editingCompany, setEditingCompany] = useState<any>(null);
@@ -102,6 +132,7 @@ export default function AdminDashboardPage() {
       setDashboardData(dashRes);
       if (compRes.companies) setCompanies(compRes.companies);
       if (ruleRes.rules) setPriceRules(ruleRes.rules);
+      if (ruleRes.lookup) setRuleLookup(ruleRes.lookup);
     } catch (e) {
       console.error('Veri yükleme hatası:', e);
     } finally {
@@ -215,23 +246,154 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleCreatePriceRule = async (e: React.FormEvent) => {
+  // B2B FİYAT KURALI İŞLEMLERİ
+  const handleRuleTypeChange = (newType: string) => {
+    let recPriority = '5';
+    if (newType === 'CUSTOMER_PRODUCT') recPriority = '1';
+    else if (newType === 'CUSTOMER_CATEGORY') recPriority = '2';
+    else if (newType === 'CUSTOMER_BRAND') recPriority = '3';
+    else if (newType === 'CUSTOMER_PERCENT') recPriority = '4';
+    else if (newType === 'GROUP_PRODUCT' || newType === 'QTY_TIER') recPriority = '5';
+    else if (newType === 'GROUP_CATEGORY' || newType === 'GROUP_BRAND') recPriority = '6';
+    else if (newType === 'GROUP_PERCENT' || newType === 'CATEGORY_CAMPAIGN' || newType === 'BRAND_CAMPAIGN') recPriority = '7';
+
+    setRuleForm(prev => ({
+      ...prev,
+      type: newType,
+      priority: recPriority,
+    }));
+  };
+
+  const openCreateRuleModal = () => {
+    setEditingRule(null);
+    setModalProductSearch('');
+    setRuleForm({
+      id: '',
+      name: '',
+      type: 'CUSTOMER_CATEGORY',
+      companyId: ruleLookup.companies[0]?.id || companies[0]?.id || '',
+      customerGroupId: ruleLookup.customerGroups[0]?.id || '',
+      categoryId: ruleLookup.categories[0]?.id || '',
+      brandId: ruleLookup.brands[0]?.id || '',
+      productId: ruleLookup.products[0]?.id || '',
+      valueType: 'PERCENT',
+      discountPercent: '20',
+      specialPrice: '',
+      priority: '2',
+      minQty: '1',
+      validFrom: '',
+      validTo: '',
+      active: true,
+    });
+    setShowRuleModal(true);
+  };
+
+  const openEditRuleModal = (rule: any) => {
+    setEditingRule(rule);
+    setModalProductSearch('');
+    setRuleForm({
+      id: rule.id,
+      name: rule.name || '',
+      type: rule.type || 'GROUP_PERCENT',
+      companyId: rule.companyId || rule.company?.id || '',
+      customerGroupId: rule.customerGroupId || rule.customerGroup?.id || '',
+      categoryId: rule.categoryId || rule.category?.id || '',
+      brandId: rule.brandId || rule.brand?.id || '',
+      productId: rule.productId || rule.product?.id || '',
+      valueType: rule.specialPrice != null && Number(rule.specialPrice) > 0 ? 'SPECIAL_PRICE' : 'PERCENT',
+      discountPercent: rule.discountPercent != null ? String(rule.discountPercent) : '',
+      specialPrice: rule.specialPrice != null ? String(rule.specialPrice) : '',
+      priority: String(rule.priority || 5),
+      minQty: String(rule.minQty || 1),
+      validFrom: rule.validFrom ? new Date(rule.validFrom).toISOString().split('T')[0] : '',
+      validTo: rule.validTo ? new Date(rule.validTo).toISOString().split('T')[0] : '',
+      active: rule.active !== undefined ? rule.active : true,
+    });
+    setShowRuleModal(true);
+  };
+
+  const handleSavePriceRule = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ruleForm.name.trim()) {
+      alert('Lütfen kural adı giriniz.');
+      return;
+    }
+
+    const payload = {
+      id: editingRule ? editingRule.id : undefined,
+      name: ruleForm.name.trim(),
+      type: ruleForm.type,
+      priority: parseInt(ruleForm.priority, 10) || 5,
+      companyId: ruleForm.companyId || null,
+      customerGroupId: ruleForm.customerGroupId || null,
+      categoryId: ruleForm.categoryId || null,
+      brandId: ruleForm.brandId || null,
+      productId: ruleForm.productId || null,
+      discountPercent: ruleForm.valueType === 'PERCENT' && ruleForm.discountPercent ? parseFloat(ruleForm.discountPercent) : null,
+      specialPrice: ruleForm.valueType === 'SPECIAL_PRICE' && ruleForm.specialPrice ? parseFloat(ruleForm.specialPrice) : null,
+      minQty: ruleForm.minQty ? parseInt(ruleForm.minQty, 10) : null,
+      validFrom: ruleForm.validFrom || null,
+      validTo: ruleForm.validTo || null,
+      active: ruleForm.active,
+    };
+
     try {
-      await fetch('/api/v1/admin/price-rules', {
-        method: 'POST',
+      const res = await fetch('/api/v1/admin/price-rules', {
+        method: editingRule ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: ruleName,
-          type: ruleType,
-          priority: parseInt(rulePriority),
-          discountPercent: parseFloat(ruleDiscount),
-        }),
+        body: JSON.stringify(payload),
       });
-      setShowAddRuleModal(false);
+      const data = await res.json();
+      if (data.success) {
+        setShowRuleModal(false);
+        setEditingRule(null);
+        await loadData();
+      } else {
+        alert('Hata: ' + (data.error || 'İşlem gerçekleştirilemedi'));
+      }
+    } catch (err: any) {
+      alert('İstek hatası: ' + err.message);
+    }
+  };
+
+  const handleToggleRuleActive = async (rule: any) => {
+    const newActive = !rule.active;
+    // Optimistic UI update
+    setPriceRules(prev => prev.map(r => r.id === rule.id ? { ...r, active: newActive } : r));
+    try {
+      const res = await fetch('/api/v1/admin/price-rules', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: rule.id, active: newActive }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setPriceRules(prev => prev.map(r => r.id === rule.id ? { ...r, active: !newActive } : r));
+        alert('Kural durumu güncellenemedi');
+      }
+    } catch {
+      setPriceRules(prev => prev.map(r => r.id === rule.id ? { ...r, active: !newActive } : r));
+      alert('Bağlantı hatası');
+    }
+  };
+
+  const handleDeletePriceRule = async (ruleId: string, ruleName: string) => {
+    if (!confirm(`"${ruleName}" fiyatlandırma kuralını silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve kural anında pasifleşecektir.`)) return;
+
+    // Optimistic UI update
+    setPriceRules(prev => prev.filter(r => r.id !== ruleId));
+    try {
+      const res = await fetch(`/api/v1/admin/price-rules?id=${ruleId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert('Kural silinemedi: ' + (data.error || 'Bilinmeyen hata'));
+        loadData();
+      }
+    } catch {
+      alert('Bağlantı hatası');
       loadData();
-    } catch (err) {
-      alert('Fiyat kuralı eklenemedi');
     }
   };
 
@@ -629,12 +791,12 @@ export default function AdminDashboardPage() {
                   </Link>
 
                   <button
-                    onClick={() => { setActiveTab('rules'); setShowAddRuleModal(true); }}
+                    onClick={() => { setActiveTab('rules'); openCreateRuleModal(); }}
                     className="w-full p-4 bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-white rounded-2xl text-left font-bold text-xs flex items-center justify-between transition"
                   >
                     <div>
                       <div className="font-black text-sm text-emerald-400">🏷️ B2B İskonto Kuralı Tanımla</div>
-                      <div className="text-[11px] text-slate-400 font-normal">Müşteri grubu ve marka bazlı dinamik indirim</div>
+                      <div className="text-[11px] text-slate-400 font-normal">Firma, kategori, marka veya grup bazlı dinamik iskonto</div>
                     </div>
                     <span className="text-slate-400">→</span>
                   </button>
@@ -1047,54 +1209,324 @@ export default function AdminDashboardPage() {
           {/* 5. FİYATLANDIRMA KURALLARI (PRICING ENGINE) */}
           {activeTab === 'rules' && (
             <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden space-y-6">
-              <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+              <div className="p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <h3 className="font-black text-white text-base">B2B Fiyatlandırma Kuralları</h3>
-                  <p className="text-xs text-slate-400">Öncelik sıralamasına (1-7) göre çalışan dinamik iskonto motoru</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-white text-base">B2B Fiyatlandırma Kuralları</h3>
+                    <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-[10px] font-black uppercase">
+                      {priceRules.length} Kural Tanımlı
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Öncelik sıralamasına (1-7) göre çalışan dinamik iskonto ve özel fiyat motoru
+                  </p>
                 </div>
                 <button
-                  onClick={() => setShowAddRuleModal(true)}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+                  onClick={openCreateRuleModal}
+                  className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black rounded-xl flex items-center gap-2 shadow-lg shadow-blue-600/20 transition-all"
                 >
-                  <Plus size={16} /> Yeni Fiyat Kuralı Ekle
+                  <Plus size={16} /> Yeni B2B Fiyat Kuralı Ekle
                 </button>
               </div>
 
+              {/* Öncelik Kılavuzu & Bilgilendirme Banner'ı */}
+              <div className="px-6">
+                <div className="p-4 bg-slate-950/70 border border-slate-800/80 rounded-2xl space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-black text-white flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-amber-400" /> Dinamik İskonto Motoru Öncelik Hiyerarşisi (1 → 7)
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Sistem fiyat hesaplarken en düşük numaralı (1) ilk eşleşen kuralı uygular
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[10px] font-bold">
+                    <div className="p-2 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300">
+                      <div className="font-black text-rose-400">1. En Yüksek</div>
+                      <div className="text-[10px] text-slate-300 font-medium">Firma + Ürün Fiyatı</div>
+                    </div>
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300">
+                      <div className="font-black text-amber-400">2. Yüksek</div>
+                      <div className="text-[10px] text-slate-300 font-medium">Firma + Kategori</div>
+                    </div>
+                    <div className="p-2 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-300">
+                      <div className="font-black text-purple-400">3. Orta-Üst</div>
+                      <div className="text-[10px] text-slate-300 font-medium">Firma + Marka</div>
+                    </div>
+                    <div className="p-2 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-300">
+                      <div className="font-black text-blue-400">4. Firma Cari</div>
+                      <div className="text-[10px] text-slate-300 font-medium">Firma Genel İskonto</div>
+                    </div>
+                    <div className="p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-300">
+                      <div className="font-black text-cyan-400">5. Grup Özel</div>
+                      <div className="text-[10px] text-slate-300 font-medium">Grup+Ürün / Adet</div>
+                    </div>
+                    <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300">
+                      <div className="font-black text-emerald-400">6. Grup Kategori</div>
+                      <div className="text-[10px] text-slate-300 font-medium">Grup+Kategori/Marka</div>
+                    </div>
+                    <div className="p-2 bg-slate-800/80 border border-slate-700 rounded-xl text-slate-300">
+                      <div className="font-black text-slate-400">7. Genel Liste</div>
+                      <div className="text-[10px] text-slate-400 font-medium">Grup / B2B Genel</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filtre ve Arama Çubuğu */}
+              <div className="px-6 flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={ruleSearch}
+                    onChange={(e) => setRuleSearch(e.target.value)}
+                    placeholder="Kural adı, firma, grup, kategori, marka veya SKU ara..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition"
+                  />
+                  {ruleSearch && (
+                    <button
+                      onClick={() => setRuleSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={ruleScopeFilter}
+                    onChange={(e) => setRuleScopeFilter(e.target.value)}
+                    className="px-3.5 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="ALL">Tüm Kapsamlar</option>
+                    <option value="CUSTOMER">🏢 Firma Özel Kuralları</option>
+                    <option value="CATEGORY">📁 Kategori Bazlı Kurallar</option>
+                    <option value="BRAND">🏷️ Marka Bazlı Kurallar</option>
+                    <option value="PRODUCT">📦 Ürün Özel / Net Fiyatlar</option>
+                    <option value="GROUP">👥 Bayi Grubu Kuralları</option>
+                  </select>
+                  <button
+                    onClick={loadData}
+                    className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition"
+                    title="Yenile"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Kurallar Tablosu */}
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-slate-950/60 border-b border-slate-800 text-slate-400 font-bold uppercase">
-                      <th className="p-4">Öncelik</th>
-                      <th className="p-4">Kural Adı</th>
-                      <th className="p-4">Kural Türü</th>
-                      <th className="p-4">Müşteri Grubu / Firma</th>
+                    <tr className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                      <th className="p-4 w-28 text-center">Öncelik</th>
+                      <th className="p-4">Kural Adı &amp; Kapsam</th>
+                      <th className="p-4">Hedef (Firma / Grup)</th>
+                      <th className="p-4">Kategori / Marka / Ürün</th>
                       <th className="p-4 text-right">İndirim / Özel Fiyat</th>
-                      <th className="p-4">Durum</th>
+                      <th className="p-4 text-center">Durum</th>
+                      <th className="p-4 text-right w-24">İşlemler</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
-                    {priceRules.map((r) => (
-                      <tr key={r.id} className="hover:bg-slate-800/50">
-                        <td className="p-4">
-                          <span className="w-6 h-6 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-black">
-                            {r.priority}
-                          </span>
-                        </td>
-                        <td className="p-4 font-black text-white">{r.name}</td>
-                        <td className="p-4 font-mono text-slate-400">{r.type}</td>
-                        <td className="p-4 text-slate-300 font-medium">
-                          {r.customerGroup?.name || r.company?.legalName || 'Genel'}
-                        </td>
-                        <td className="p-4 text-right font-black text-emerald-400">
-                          {r.specialPrice ? `Net ${r.specialPrice} ₺` : `%${r.discountPercent} İndirim`}
-                        </td>
-                        <td className="p-4">
-                          <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px] font-black uppercase">
-                            AKTİF
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {(() => {
+                      const filtered = priceRules.filter(r => {
+                        if (ruleSearch.trim()) {
+                          const q = ruleSearch.toLowerCase();
+                          const matchesName = r.name?.toLowerCase().includes(q);
+                          const matchesCompany = r.company?.legalName?.toLowerCase().includes(q);
+                          const matchesGroup = r.customerGroup?.name?.toLowerCase().includes(q);
+                          const matchesCategory = r.category?.name?.toLowerCase().includes(q);
+                          const matchesBrand = r.brand?.name?.toLowerCase().includes(q);
+                          const matchesProduct = r.product?.name?.toLowerCase().includes(q) || r.product?.sku?.toLowerCase().includes(q);
+                          if (!matchesName && !matchesCompany && !matchesGroup && !matchesCategory && !matchesBrand && !matchesProduct) {
+                            return false;
+                          }
+                        }
+                        if (ruleScopeFilter === 'CUSTOMER') {
+                          if (!r.companyId && !r.company) return false;
+                        } else if (ruleScopeFilter === 'CATEGORY') {
+                          if (!r.categoryId && !r.category) return false;
+                        } else if (ruleScopeFilter === 'BRAND') {
+                          if (!r.brandId && !r.brand) return false;
+                        } else if (ruleScopeFilter === 'PRODUCT') {
+                          if (!r.productId && !r.product && !r.specialPrice) return false;
+                        } else if (ruleScopeFilter === 'GROUP') {
+                          if (!r.customerGroupId && !r.customerGroup) return false;
+                        }
+                        return true;
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={7} className="p-12 text-center text-slate-500">
+                              <Layers size={36} className="mx-auto mb-2 opacity-40 text-slate-400" />
+                              <div className="font-bold text-slate-300">Fiyatlandırma kuralı bulunamadı</div>
+                              <div className="text-xs text-slate-500 mt-1">Arama filtrenizi değiştirebilir veya yeni bir kural ekleyebilirsiniz.</div>
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return filtered.map((r) => {
+                        const isCompanyRule = Boolean(r.companyId || r.company);
+                        const isCategoryRule = Boolean(r.categoryId || r.category);
+                        const isBrandRule = Boolean(r.brandId || r.brand);
+                        const isProductRule = Boolean(r.productId || r.product);
+
+                        let priorityColor = 'bg-slate-800 text-slate-300 border-slate-700';
+                        let priorityLabel = '7 (Grup Genel)';
+                        if (r.priority === 1) {
+                          priorityColor = 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+                          priorityLabel = '1 (Firma+Ürün)';
+                        } else if (r.priority === 2) {
+                          priorityColor = 'bg-amber-500/20 text-amber-400 border-amber-500/40';
+                          priorityLabel = '2 (Firma+Kategori)';
+                        } else if (r.priority === 3) {
+                          priorityColor = 'bg-purple-500/20 text-purple-400 border-purple-500/40';
+                          priorityLabel = '3 (Firma+Marka)';
+                        } else if (r.priority === 4) {
+                          priorityColor = 'bg-blue-500/20 text-blue-400 border-blue-500/40';
+                          priorityLabel = '4 (Firma Cari)';
+                        } else if (r.priority === 5) {
+                          priorityColor = 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40';
+                          priorityLabel = '5 (Grup+Ürün/Adet)';
+                        } else if (r.priority === 6) {
+                          priorityColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+                          priorityLabel = '6 (Grup+Kategori)';
+                        }
+
+                        return (
+                          <tr key={r.id} className="hover:bg-slate-800/40 transition-colors">
+                            {/* Öncelik */}
+                            <td className="p-4 text-center">
+                              <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-lg border font-black text-[11px] ${priorityColor}`}>
+                                ⭐ {r.priority}
+                              </span>
+                            </td>
+
+                            {/* Kural Adı & Tür */}
+                            <td className="p-4">
+                              <div className="font-black text-white text-sm">{r.name}</div>
+                              <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px] text-slate-400">
+                                <span className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 font-bold">
+                                  {r.type}
+                                </span>
+                                {r.minQty && r.minQty > 1 && (
+                                  <span className="px-1.5 py-0.5 bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 rounded font-bold">
+                                    Min {r.minQty} Adet
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Hedef (Firma / Müşteri Grubu) */}
+                            <td className="p-4">
+                              {r.company?.legalName ? (
+                                <div className="space-y-0.5">
+                                  <div className="font-bold text-blue-400 flex items-center gap-1.5">
+                                    <Building2 size={13} className="text-blue-400 shrink-0" />
+                                    {r.company.legalName}
+                                  </div>
+                                  {r.company.taxNo && (
+                                    <div className="text-[10px] text-slate-500 font-mono pl-4">VKN: {r.company.taxNo}</div>
+                                  )}
+                                </div>
+                              ) : r.customerGroup?.name ? (
+                                <div className="font-bold text-emerald-400 flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                                  {r.customerGroup.name}
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 font-medium">🌐 Tüm B2B Müşterileri</span>
+                              )}
+                            </td>
+
+                            {/* Kategori / Marka / Ürün */}
+                            <td className="p-4">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {r.category?.name && (
+                                  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-md text-[11px] font-bold flex items-center gap-1">
+                                    📁 {r.category.name}
+                                  </span>
+                                )}
+                                {r.brand?.name && (
+                                  <span className="px-2 py-0.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded-md text-[11px] font-bold flex items-center gap-1">
+                                    🏷️ {r.brand.name}
+                                  </span>
+                                )}
+                                {r.product?.name && (
+                                  <span className="px-2 py-0.5 bg-rose-500/10 text-rose-300 border border-rose-500/20 rounded-md text-[11px] font-bold flex items-center gap-1">
+                                    📦 {r.product.name} ({r.product.sku})
+                                  </span>
+                                )}
+                                {!r.category && !r.brand && !r.product && (
+                                  <span className="text-slate-500 text-[11px]">Tüm Ürünler &amp; Kategoriler</span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* İndirim / Sabit Fiyat */}
+                            <td className="p-4 text-right">
+                              {r.specialPrice != null && Number(r.specialPrice) > 0 ? (
+                                <div className="space-y-0.5">
+                                  <div className="font-black text-cyan-400 text-sm">
+                                    Net {Number(r.specialPrice).toLocaleString('tr-TR')} ₺
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 font-mono">+ KDV Sabit Fiyat</div>
+                                </div>
+                              ) : (
+                                <div className="space-y-0.5">
+                                  <div className="font-black text-emerald-400 text-sm">
+                                    %{r.discountPercent} İndirim
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 font-mono">Liste Fiyatı Üzerinden</div>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Durum & Anlık Toggle Switch */}
+                            <td className="p-4 text-center">
+                              <button
+                                onClick={() => handleToggleRuleActive(r)}
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase transition-all flex items-center gap-1 mx-auto ${
+                                  r.active
+                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30'
+                                    : 'bg-slate-800 text-slate-500 border border-slate-700 hover:bg-slate-700 hover:text-slate-300'
+                                }`}
+                                title="Durumu değiştirmek için tıklayın"
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${r.active ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}></span>
+                                {r.active ? 'AKTİF' : 'PASİF'}
+                              </button>
+                            </td>
+
+                            {/* İşlemler */}
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => openEditRuleModal(r)}
+                                  className="p-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg transition"
+                                  title="Kuralı Düzenle"
+                                >
+                                  <Edit size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeletePriceRule(r.id, r.name)}
+                                  className="p-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white rounded-lg transition"
+                                  title="Kuralı Sil"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
                   </tbody>
                 </table>
               </div>
@@ -1384,72 +1816,389 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* YENİ FİYAT KURALI MODALI */}
-      {showAddRuleModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-slate-800 shadow-2xl">
-            <h3 className="text-base font-black text-white mb-4">Yeni B2B Fiyat Kuralı Ekle</h3>
-
-            <form onSubmit={handleCreatePriceRule} className="space-y-4 text-xs font-bold">
+      {/* B2B FİYAT KURALI EKLEME & DÜZENLEME MODALI */}
+      {showRuleModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 rounded-3xl p-6 md:p-8 max-w-2xl w-full border border-slate-800 shadow-2xl space-y-6 my-8">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-4">
               <div>
-                <label className="block text-slate-300 mb-1">Kural Adı</label>
+                <h3 className="text-base md:text-lg font-black text-white flex items-center gap-2">
+                  {editingRule ? '✏️ B2B Fiyatlandırma Kuralını Düzenle' : '✨ Yeni B2B Fiyat Kuralı Tanımla'}
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {editingRule ? `Kural ID: ${editingRule.id}` : 'Firma veya kategori özelinde dinamik iskonto ve öncelik tanımlayın'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRuleModal(false)}
+                className="p-2 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePriceRule} className="space-y-4 text-xs font-bold">
+              {/* 1. KURAL ADI */}
+              <div>
+                <label className="block text-slate-300 mb-1.5 font-bold">
+                  Kural Adı <span className="text-rose-400">*</span>
+                </label>
                 <input
                   type="text"
                   required
-                  value={ruleName}
-                  onChange={(e) => setRuleName(e.target.value)}
-                  placeholder="Örn: Toptancılar %20 İndirim"
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white"
+                  value={ruleForm.name}
+                  onChange={(e) => setRuleForm({ ...ruleForm, name: e.target.value })}
+                  placeholder="Örn: Çınar Isı Kombi Kartları %25 Özel İskonto"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
+              {/* 2. KURAL KAPSAMI / TÜRÜ */}
               <div>
-                <label className="block text-slate-300 mb-1">Kural Türü</label>
+                <label className="block text-slate-300 mb-1.5 font-bold">
+                  Kural Türü &amp; Hedef Kapsamı <span className="text-rose-400">*</span>
+                </label>
                 <select
-                  value={ruleType}
-                  onChange={(e) => setRuleType(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white"
+                  value={ruleForm.type}
+                  onChange={(e) => handleRuleTypeChange(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-blue-500"
                 >
-                  <option value="GROUP_PERCENT">Müşteri Grubu Genel İndirimi (%)</option>
-                  <option value="GROUP_CATEGORY">Grup + Kategori İndirimi</option>
-                  <option value="GROUP_BRAND">Grup + Marka İndirimi</option>
+                  <optgroup label="🏢 Firma (Cari) Özel İndirimleri (Yüksek Öncelikli)">
+                    <option value="CUSTOMER_CATEGORY">🔶 2. Firma + Kategori İskontosu (Örn: Çınar Isı -&gt; Kombi Kartları %25)</option>
+                    <option value="CUSTOMER_PRODUCT">⭐ 1. Firma + Ürün Özel Net Fiyat / İskonto (Örn: Çınar Isı -&gt; Sirkülasyon Pompası Net 1.950 ₺)</option>
+                    <option value="CUSTOMER_BRAND">🟣 3. Firma + Marka İskontosu (Örn: Çınar Isı -&gt; Baymak Parçaları %20)</option>
+                    <option value="CUSTOMER_PERCENT">🔵 4. Firma Genel Cari İskontosu (Tüm Ürünlerde % İndirim)</option>
+                  </optgroup>
+                  <optgroup label="👥 Müşteri Grubu (Bayi) İndirimleri">
+                    <option value="GROUP_CATEGORY">🟢 6. Müşteri Grubu + Kategori İskontosu (Örn: A Grubu -&gt; Kombi Kartı %20)</option>
+                    <option value="GROUP_BRAND">🟣 6. Müşteri Grubu + Marka İskontosu (Örn: A Grubu -&gt; Demirdöküm %15)</option>
+                    <option value="GROUP_PRODUCT">💠 5. Müşteri Grubu + Ürün İskontosu</option>
+                    <option value="QTY_TIER">📦 5. Miktar Kademeli İskonto (Min. Adet Şartlı)</option>
+                    <option value="GROUP_PERCENT">⚪ 7. Müşteri Grubu Genel Liste İskontosu (Örn: A Grubu %15)</option>
+                  </optgroup>
+                  <optgroup label="🌐 Genel Kampanyalar (Tüm B2B)">
+                    <option value="CATEGORY_CAMPAIGN">🏷️ 7. Genel Kategori Kampanyası</option>
+                    <option value="BRAND_CAMPAIGN">🏷️ 7. Genel Marka Kampanyası</option>
+                  </optgroup>
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* 3. DİNAMİK BAĞLAMSAL SEÇİCİLER */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-950/60 border border-slate-800 rounded-2xl">
+                {/* Firma Seçimi */}
+                {['CUSTOMER_PRODUCT', 'CUSTOMER_CATEGORY', 'CUSTOMER_BRAND', 'CUSTOMER_PERCENT'].includes(ruleForm.type) && (
+                  <div className="md:col-span-2">
+                    <label className="block text-blue-300 mb-1.5 font-bold flex items-center gap-1.5">
+                      <Building2 size={14} className="text-blue-400" /> Hedef Firma (Cari) <span className="text-rose-400">*</span>
+                    </label>
+                    <select
+                      value={ruleForm.companyId}
+                      onChange={(e) => setRuleForm({ ...ruleForm, companyId: e.target.value })}
+                      required
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-blue-500/40 rounded-xl text-white focus:outline-none focus:border-blue-400"
+                    >
+                      <option value="">-- Firma Seçiniz --</option>
+                      {(ruleLookup.companies.length > 0 ? ruleLookup.companies : companies).map((c: any) => (
+                        <option key={c.id} value={c.id}>
+                          {c.legalName} {c.taxNo ? `(VKN: ${c.taxNo})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Müşteri Grubu Seçimi */}
+                {['GROUP_PRODUCT', 'GROUP_CATEGORY', 'GROUP_BRAND', 'GROUP_PERCENT'].includes(ruleForm.type) && (
+                  <div className="md:col-span-2">
+                    <label className="block text-emerald-300 mb-1.5 font-bold">
+                      👥 Hedef Müşteri Grubu (Bayi Grubu) <span className="text-rose-400">*</span>
+                    </label>
+                    <select
+                      value={ruleForm.customerGroupId}
+                      onChange={(e) => setRuleForm({ ...ruleForm, customerGroupId: e.target.value })}
+                      required
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-emerald-500/40 rounded-xl text-white focus:outline-none focus:border-emerald-400"
+                    >
+                      <option value="">-- Müşteri Grubu Seçiniz --</option>
+                      {(ruleLookup.customerGroups || []).map((g: any) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name} ({g.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Kategori Seçimi */}
+                {['CUSTOMER_CATEGORY', 'GROUP_CATEGORY', 'CATEGORY_CAMPAIGN'].includes(ruleForm.type) && (
+                  <div className={['CUSTOMER_BRAND', 'GROUP_BRAND'].includes(ruleForm.type) ? '' : 'md:col-span-2'}>
+                    <label className="block text-amber-300 mb-1.5 font-bold">
+                      📁 Hedef Kategori <span className="text-rose-400">*</span>
+                    </label>
+                    <select
+                      value={ruleForm.categoryId}
+                      onChange={(e) => setRuleForm({ ...ruleForm, categoryId: e.target.value })}
+                      required
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-amber-500/40 rounded-xl text-white focus:outline-none focus:border-amber-400"
+                    >
+                      <option value="">-- Kategori Seçiniz --</option>
+                      {(ruleLookup.categories.length > 0 ? ruleLookup.categories : adminCategories).map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Marka Seçimi */}
+                {['CUSTOMER_BRAND', 'GROUP_BRAND', 'BRAND_CAMPAIGN'].includes(ruleForm.type) && (
+                  <div className={['CUSTOMER_CATEGORY', 'GROUP_CATEGORY'].includes(ruleForm.type) ? '' : 'md:col-span-2'}>
+                    <label className="block text-purple-300 mb-1.5 font-bold">
+                      🏷️ Hedef Marka <span className="text-rose-400">*</span>
+                    </label>
+                    <select
+                      value={ruleForm.brandId}
+                      onChange={(e) => setRuleForm({ ...ruleForm, brandId: e.target.value })}
+                      required
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-purple-500/40 rounded-xl text-white focus:outline-none focus:border-purple-400"
+                    >
+                      <option value="">-- Marka Seçiniz --</option>
+                      {(ruleLookup.brands.length > 0 ? ruleLookup.brands : adminBrands).map((b: any) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Tekil Ürün Seçimi */}
+                {['CUSTOMER_PRODUCT', 'GROUP_PRODUCT'].includes(ruleForm.type) && (
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="block text-rose-300 font-bold">
+                      📦 Hedef Ürün (SKU / Ürün Adı) <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ürün adı veya SKU ile filtreleyin..."
+                      value={modalProductSearch}
+                      onChange={(e) => setModalProductSearch(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs placeholder:text-slate-500"
+                    />
+                    <select
+                      value={ruleForm.productId}
+                      onChange={(e) => setRuleForm({ ...ruleForm, productId: e.target.value })}
+                      required
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-rose-500/40 rounded-xl text-white focus:outline-none focus:border-rose-400"
+                    >
+                      <option value="">-- Ürün Seçiniz --</option>
+                      {(() => {
+                        const prods = ruleLookup.products.length > 0 ? ruleLookup.products : adminProducts;
+                        const filtered = modalProductSearch.trim()
+                          ? prods.filter((p: any) =>
+                              p.name.toLowerCase().includes(modalProductSearch.toLowerCase()) ||
+                              p.sku.toLowerCase().includes(modalProductSearch.toLowerCase())
+                            )
+                          : prods;
+                        return filtered.map((p: any) => (
+                          <option key={p.id} value={p.id}>
+                            {p.sku} - {p.name} ({p.salePrice ? `${p.salePrice} ${p.currency || 'TRY'}` : 'Fiyat Belirtilmemiş'})
+                          </option>
+                        ));
+                      })()}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* 4. FİYATLANDIRMA TİPİ & DEĞERİ */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-300 mb-1">İndirim Yüzdesi (%)</label>
-                  <input
-                    type="number"
-                    value={ruleDiscount}
-                    onChange={(e) => setRuleDiscount(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white"
-                  />
+                  <label className="block text-slate-300 mb-1.5 font-bold">Fiyatlandırma Tipi</label>
+                  <div className="flex rounded-xl bg-slate-800 p-1 border border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => setRuleForm({ ...ruleForm, valueType: 'PERCENT' })}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                        ruleForm.valueType === 'PERCENT'
+                          ? 'bg-blue-600 text-white shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      % İskonto Oranı
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRuleForm({ ...ruleForm, valueType: 'SPECIAL_PRICE' })}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                        ruleForm.valueType === 'SPECIAL_PRICE'
+                          ? 'bg-blue-600 text-white shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Sabit Net Fiyat (₺)
+                    </button>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-slate-300 mb-1">Öncelik (1-7)</label>
+                  {ruleForm.valueType === 'PERCENT' ? (
+                    <div>
+                      <label className="block text-emerald-400 mb-1.5 font-bold">İskonto Yüzdesi (%)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          required
+                          value={ruleForm.discountPercent}
+                          onChange={(e) => setRuleForm({ ...ruleForm, discountPercent: e.target.value })}
+                          placeholder="Örn: 20"
+                          className="w-full px-4 py-2 bg-slate-800 border border-emerald-500/50 rounded-xl text-white font-mono text-sm"
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-400 font-bold">%</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-cyan-400 mb-1.5 font-bold">Sabit Net Fiyat (₺ + KDV)</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          required
+                          value={ruleForm.specialPrice}
+                          onChange={(e) => setRuleForm({ ...ruleForm, specialPrice: e.target.value })}
+                          placeholder="Örn: 1950.00"
+                          className="w-full px-4 py-2 bg-slate-800 border border-cyan-500/50 rounded-xl text-white font-mono text-sm"
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-cyan-400 font-bold">₺</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 5. ÖNCELİK VE MİNİMUM ADET */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-slate-300 font-bold">Öncelik Seviyesi (1 - 7)</label>
+                    <span className="text-[10px] text-amber-400 font-bold">1 = En Yüksek</span>
+                  </div>
+                  <select
+                    value={ruleForm.priority}
+                    onChange={(e) => setRuleForm({ ...ruleForm, priority: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white font-bold"
+                  >
+                    <option value="1">⭐ 1 - En Yüksek (Firma + Ürün Net Fiyatı)</option>
+                    <option value="2">🔶 2 - Yüksek (Firma + Kategori İskontosu)</option>
+                    <option value="3">🟣 3 - Orta-Üst (Firma + Marka İskontosu)</option>
+                    <option value="4">🔵 4 - Firma Cari (Firma Genel İskontosu)</option>
+                    <option value="5">💠 5 - Grup Özel / Adet Kademesi (Grup + Ürün)</option>
+                    <option value="6">🟢 6 - Grup Kategori / Marka İskontosu</option>
+                    <option value="7">⚪ 7 - Grup Genel / Kampanya Liste İskontosu</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 mb-1.5 font-bold">Min. Sipariş Adedi (Şartlı İskonto)</label>
                   <input
                     type="number"
-                    value={rulePriority}
-                    onChange={(e) => setRulePriority(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white"
+                    min="1"
+                    value={ruleForm.minQty}
+                    onChange={(e) => setRuleForm({ ...ruleForm, minQty: e.target.value })}
+                    placeholder="1 (Herhangi bir adet)"
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white font-mono"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-4">
+              {/* 6. GEÇERLİLİK TARİHLERİ VE AKTİFLİK */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div>
+                  <label className="block text-slate-400 mb-1 font-bold text-[11px]">Geçerlilik Başlangıcı</label>
+                  <input
+                    type="date"
+                    value={ruleForm.validFrom}
+                    onChange={(e) => setRuleForm({ ...ruleForm, validFrom: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1 font-bold text-[11px]">Geçerlilik Bitişi</label>
+                  <input
+                    type="date"
+                    value={ruleForm.validTo}
+                    onChange={(e) => setRuleForm({ ...ruleForm, validTo: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1 font-bold text-[11px]">Kural Durumu</label>
+                  <button
+                    type="button"
+                    onClick={() => setRuleForm({ ...ruleForm, active: !ruleForm.active })}
+                    className={`w-full py-2 px-3 rounded-xl font-black text-xs transition flex items-center justify-center gap-1.5 ${
+                      ruleForm.active
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${ruleForm.active ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}></span>
+                    {ruleForm.active ? 'KURAL AKTİF' : 'KURAL PASİF'}
+                  </button>
+                </div>
+              </div>
+
+              {/* CANLI KURAL ÖNİZLEME KARTI */}
+              <div className="p-3.5 bg-blue-950/30 border border-blue-800/40 rounded-2xl text-[11px] text-blue-200 flex items-start gap-2.5">
+                <Sparkles size={16} className="text-blue-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-black text-blue-300 mb-0.5">Canlı Kural Önizleme Özeti:</div>
+                  <p className="text-slate-300">
+                    {(() => {
+                      const compObj = (ruleLookup.companies.length > 0 ? ruleLookup.companies : companies).find((c: any) => c.id === ruleForm.companyId);
+                      const grpObj = (ruleLookup.customerGroups || []).find((g: any) => g.id === ruleForm.customerGroupId);
+                      const catObj = (ruleLookup.categories.length > 0 ? ruleLookup.categories : adminCategories).find((c: any) => c.id === ruleForm.categoryId);
+                      const brdObj = (ruleLookup.brands.length > 0 ? ruleLookup.brands : adminBrands).find((b: any) => b.id === ruleForm.brandId);
+                      const prdObj = (ruleLookup.products.length > 0 ? ruleLookup.products : adminProducts).find((p: any) => p.id === ruleForm.productId);
+
+                      let targetDesc = 'Tüm B2B müşterileri';
+                      if (compObj) targetDesc = `"${compObj.legalName}" firması`;
+                      else if (grpObj) targetDesc = `"${grpObj.name}" grubu üyeleri`;
+
+                      let scopeDesc = 'tüm ürünler';
+                      if (prdObj) scopeDesc = `"${prdObj.name}" (${prdObj.sku}) ürünü`;
+                      else if (catObj) scopeDesc = `"${catObj.name}" kategorisindeki ürünler`;
+                      else if (brdObj) scopeDesc = `"${brdObj.name}" markalı ürünler`;
+
+                      let valueDesc = ruleForm.valueType === 'PERCENT' ? `%${ruleForm.discountPercent || 0} indirimle` : `Net ${ruleForm.specialPrice || 0} ₺ sabit fiyatla`;
+
+                      return `${targetDesc} için ${scopeDesc} ${valueDesc} fiyatlandırılacaktır. (Öncelik Seviyesi: ${ruleForm.priority})`;
+                    })()}
+                  </p>
+                </div>
+              </div>
+
+              {/* BUTONLAR */}
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddRuleModal(false)}
-                  className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl"
+                  onClick={() => setShowRuleModal(false)}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl"
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg shadow-blue-600/30 transition-all"
                 >
-                  Kuralı Kaydet
+                  {editingRule ? '💾 Değişiklikleri Kaydet' : '✨ Kuralı Oluştur & Başlat'}
                 </button>
               </div>
             </form>

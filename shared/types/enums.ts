@@ -32,11 +32,16 @@ export type CompanyMemberRole = (typeof CompanyMemberRole)[keyof typeof CompanyM
 
 export const PriceRuleType = {
   CUSTOMER_PRODUCT: 'CUSTOMER_PRODUCT',
+  CUSTOMER_CATEGORY: 'CUSTOMER_CATEGORY',
+  CUSTOMER_BRAND: 'CUSTOMER_BRAND',
+  CUSTOMER_PERCENT: 'CUSTOMER_PERCENT',
   GROUP_PRODUCT: 'GROUP_PRODUCT',
-  GROUP_BRAND: 'GROUP_BRAND',
   GROUP_CATEGORY: 'GROUP_CATEGORY',
+  GROUP_BRAND: 'GROUP_BRAND',
   GROUP_PERCENT: 'GROUP_PERCENT',
   QTY_TIER: 'QTY_TIER',
+  CATEGORY_CAMPAIGN: 'CATEGORY_CAMPAIGN',
+  BRAND_CAMPAIGN: 'BRAND_CAMPAIGN',
 } as const;
 export type PriceRuleType = (typeof PriceRuleType)[keyof typeof PriceRuleType];
 
