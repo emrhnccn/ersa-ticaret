@@ -9,15 +9,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   try {
     const product = await productService.getProductBySlug(params.slug);
     if (!product) {
-      return { title: 'Ürün Bulunamadı | Ersa Ticaret' };
+      return { title: 'Ürün Bulunamadı' };
     }
 
     return {
-      title: `${product.name} | Ersa Ticaret`,
+      title: `${product.name} (${product.sku})`,
       description: `${product.sku} kodlu ${product.name} yedek parçası. Darıca Ersa Ticaret güvencesiyle stoktan anında teslim.`,
     };
   } catch {
-    return { title: 'Yedek Parça Detayı | Ersa Ticaret' };
+    return { title: 'Yedek Parça Detayı' };
   }
 }
 

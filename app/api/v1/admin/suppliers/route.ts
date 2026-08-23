@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/server/db';
 import { supplierFactory } from '@/integrations/suppliers/factory';
+import { getSessionUser } from '@/server/auth/jwt';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    const session = getSessionUser(req);
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+    }
     const registeredAdapters = supplierFactory.listAdapters();
     
     // Ensure all registered suppliers exist in database

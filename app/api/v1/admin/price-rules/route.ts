@@ -8,8 +8,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const session = getSessionUser(req);
-    if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     try {
@@ -128,8 +128,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = getSessionUser(req);
-    if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -204,8 +204,8 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const session = getSessionUser(req);
-    if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -269,8 +269,8 @@ export async function PUT(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const session = getSessionUser(req);
-    if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -321,8 +321,8 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const session = getSessionUser(req);
-    if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);

@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supplierSyncService } from '@/server/sync/supplier-sync-service';
 import type { ImportMode } from '@/integrations/suppliers/types';
+import { getSessionUser } from '@/server/auth/jwt';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Vercel serverless execution timeout (60 saniye)
 
 export async function POST(req: NextRequest) {
   try {
+    const session = getSessionUser(req);
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+    }
     const body = await req.json();
     const { supplierCode, mode = 'FULL', limit, maxPages } = body;
 

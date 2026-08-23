@@ -151,43 +151,63 @@ export default function ProductDetailClient({ product }: { product: any }) {
               </div>
             )}
 
-            {/* FİYAT KUTUSU (KDV HARİÇ STANDARDI) */}
+            {/* FİYAT KUTUSU (KDV HARİÇ STANDARDI / FİYAT SORUNUZ) */}
             <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
-                  <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    Birim Net Fiyat (KDV Hariç)
-                  </div>
-                  
-                  {isDiscounted && quote && (
-                    <div className="text-sm text-slate-400 line-through font-semibold mb-0.5">
-                      {quote.listUnitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+              {quote && quote.unitNetExVat > 0 ? (
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                  <div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Birim Net Fiyat (KDV Hariç)
                     </div>
-                  )}
+                    
+                    {isDiscounted && (
+                      <div className="text-sm text-slate-400 line-through font-semibold mb-0.5">
+                        {quote.listUnitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+                      </div>
+                    )}
 
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-                      {quote
-                        ? quote.unitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })
-                        : '1.250,00'}{' '}
-                      {currencySymbol}
-                    </span>
-                    <span className="text-xs font-black text-amber-700 bg-amber-100 px-2 py-1 rounded-lg border border-amber-300">
-                      + %{quote?.vatRate || 20} KDV
-                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+                        {quote.unitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
+                        {currencySymbol}
+                      </span>
+                      <span className="text-xs font-black text-amber-700 bg-amber-100 px-2 py-1 rounded-lg border border-amber-300">
+                        + %{quote?.vatRate || 20} KDV
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* KDV Tutarı & Genel Toplam Dağılımı */}
+                  <div className="text-left sm:text-right bg-white p-3.5 rounded-2xl border border-slate-200 text-xs space-y-1">
+                    <div className="text-slate-500">
+                      KDV Tutarı: <strong className="text-slate-800">{(quote.vatAmount * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}</strong>
+                    </div>
+                    <div className="text-slate-900 font-black text-sm pt-1 border-t border-slate-100">
+                      KDV Dahil: <span className="text-blue-600">{(quote.lineGross * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}</span>
+                    </div>
                   </div>
                 </div>
-
-                {/* KDV Tutarı & Genel Toplam Dağılımı */}
-                <div className="text-left sm:text-right bg-white p-3.5 rounded-2xl border border-slate-200 text-xs space-y-1">
-                  <div className="text-slate-500">
-                    KDV Tutarı: <strong className="text-slate-800">{quote ? (quote.vatAmount * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '0'} {currencySymbol}</strong>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Fiyat Bilgisi
+                    </div>
+                    <span className="text-2xl md:text-3xl font-black text-blue-600">
+                      Fiyat Sorunuz
+                    </span>
+                    <p className="text-xs text-slate-500 mt-1">Bu ürün için güncel iskonto ve net fiyat almak için teknik ekibimizle iletişime geçiniz.</p>
                   </div>
-                  <div className="text-slate-900 font-black text-sm pt-1 border-t border-slate-100">
-                    KDV Dahil: <span className="text-blue-600">{quote ? (quote.lineGross * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '0'} {currencySymbol}</span>
-                  </div>
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center gap-2 transition-all shrink-0"
+                  >
+                    <MessageCircle size={18} /> WhatsApp ile Fiyat Al
+                  </a>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* ADET SEÇİCİ VE SATIN ALMA BUTONLARI */}

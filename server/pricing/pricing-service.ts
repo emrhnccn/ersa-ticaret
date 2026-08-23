@@ -174,8 +174,11 @@ export const pricingService = {
       const lineGross = Number((lineNetExVat + vatAmount).toFixed(2));
 
       const currencySymbol = displayCur === 'EUR' ? '€' : displayCur === 'USD' ? '$' : '₺';
-      const formattedNet = finalUnitPriceNet.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const vatExcludedLabel = `${formattedNet} ${currencySymbol} + KDV`;
+      const hasValidPrice = finalUnitPriceNet > 0;
+      const formattedNet = hasValidPrice
+        ? finalUnitPriceNet.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '';
+      const vatExcludedLabel = hasValidPrice ? `${formattedNet} ${currencySymbol} + KDV` : 'Fiyat Sorunuz';
 
       quotes.set(product.id, {
         productId: product.id,

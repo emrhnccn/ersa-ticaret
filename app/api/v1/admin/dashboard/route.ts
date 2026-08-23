@@ -8,8 +8,8 @@ export async function GET(req: NextRequest) {
   try {
     const session = getSessionUser(req);
     // Allow admin or staff
-    if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     try {

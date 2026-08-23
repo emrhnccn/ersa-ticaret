@@ -2,7 +2,17 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ersa_jwt_secret_default_key_fallback_2026';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is not defined in production!');
+    }
+    return 'ersa_local_dev_only_secret_2026_not_for_prod';
+  }
+  return secret;
+}
+
 const TOKEN_COOKIE_NAME = 'ersa_auth_token';
 
 export interface TokenPayload {
@@ -18,12 +28,12 @@ export interface TokenPayload {
 }
 
 export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+    return jwt.verify(token, getJwtSecret()) as TokenPayload;
   } catch (error) {
     return null;
   }

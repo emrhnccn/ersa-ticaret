@@ -128,50 +128,52 @@ export default function GirisPage() {
             </button>
           </form>
 
-          {/* HIZLI TEST DEMO HESAPLARI */}
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1">
-              <Sparkles size={12} className="text-amber-500" /> Hızlı Test Demo Hesapları
+          {/* HIZLI TEST DEMO HESAPLARI (Sadece Test/Geliştirme Ortamında) */}
+          {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true' && (
+            <div className="mt-8 pt-6 border-t border-slate-100">
+              <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+                <Sparkles size={12} className="text-amber-500" /> Hızlı Test Demo Hesapları
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => fillAndLogin('admin@ersaticaret.com', 'Admin123!')}
+                  className="p-2.5 bg-slate-900 text-white hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors text-left"
+                >
+                  <Shield size={14} className="text-amber-400 shrink-0" />
+                  <div className="line-clamp-1">👑 Admin Paneli</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fillAndLogin('bayi1@cinarisi.com', 'Ersa123!')}
+                  className="p-2.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-xl flex items-center gap-2 transition-colors text-left"
+                >
+                  <Building2 size={14} className="text-emerald-600 shrink-0" />
+                  <div className="line-clamp-1">A Grubu Bayi (%15)</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fillAndLogin('bayi2@marmarateknik.com', 'Ersa123!')}
+                  className="p-2.5 bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 rounded-xl flex items-center gap-2 transition-colors text-left"
+                >
+                  <Building2 size={14} className="text-blue-600 shrink-0" />
+                  <div className="line-clamp-1">B Grubu Bayi (%10)</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fillAndLogin('musteri@gmail.com', 'Ersa123!')}
+                  className="p-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl flex items-center gap-2 transition-colors text-left"
+                >
+                  <UserCheck size={14} className="text-slate-600 shrink-0" />
+                  <div className="line-clamp-1">B2C Müşteri</div>
+                </button>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
-              <button
-                type="button"
-                onClick={() => fillAndLogin('admin@ersaticaret.com', 'Admin123!')}
-                className="p-2.5 bg-slate-900 text-white hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors text-left"
-              >
-                <Shield size={14} className="text-amber-400 shrink-0" />
-                <div className="line-clamp-1">👑 Admin Paneli</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => fillAndLogin('bayi1@cinarisi.com', 'Ersa123!')}
-                className="p-2.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-xl flex items-center gap-2 transition-colors text-left"
-              >
-                <Building2 size={14} className="text-emerald-600 shrink-0" />
-                <div className="line-clamp-1">A Grubu Bayi (%15)</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => fillAndLogin('bayi2@marmarateknik.com', 'Ersa123!')}
-                className="p-2.5 bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 rounded-xl flex items-center gap-2 transition-colors text-left"
-              >
-                <Building2 size={14} className="text-blue-600 shrink-0" />
-                <div className="line-clamp-1">B Grubu Bayi (%10)</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => fillAndLogin('musteri@gmail.com', 'Ersa123!')}
-                className="p-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl flex items-center gap-2 transition-colors text-left"
-              >
-                <UserCheck size={14} className="text-slate-600 shrink-0" />
-                <div className="line-clamp-1">B2C Müşteri</div>
-              </button>
-            </div>
-          </div>
+          )}
 
           <div className="mt-6 text-center text-xs text-slate-500">
             Bayilik hesabınız yok mu?{' '}

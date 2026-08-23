@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/server/db';
+import { getSessionUser } from '@/server/auth/jwt';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    const session = getSessionUser(req);
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+    }
     const { searchParams } = new URL(req.url);
     const supplierCode = searchParams.get('supplierCode');
     const limit = parseInt(searchParams.get('limit') || '20', 10);

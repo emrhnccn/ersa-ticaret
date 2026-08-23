@@ -119,6 +119,10 @@ export class GarantiisSupplierAdapter implements SupplierAdapter {
               priceText.replace(/TL|₺/gi, '').replace(/\./g, '').replace(',', '.').trim()
             ) || null;
 
+            if (!cleanPrice) {
+              console.warn(`[Garantiis Adapter] Fiyat metni bulunamadı veya geçersiz, ürün Fiyat Sor durumuna alındı: SKU=${sku} | "${priceText}"`);
+            }
+
             let brandName = 'Genel';
             const knownBrands = ['Fantom', 'Arçelik', 'Beko', 'Philips', 'Rowenta', 'Siemens', 'Bosch', 'Samsung', 'LG', 'Arnica', 'Dyson', 'Tefal', 'Fakir', 'Karcher'];
             for (const kb of knownBrands) {

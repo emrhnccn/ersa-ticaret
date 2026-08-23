@@ -96,29 +96,36 @@ export default function ProductCard({ product }: { product: any }) {
             OEM: <span className="text-slate-700 font-bold">{product.sku || product.code}</span>
           </div>
 
-          {/* FİYAT ALANI (KDV HARİÇ VURGUSU) */}
+          {/* FİYAT ALANI (KDV HARİÇ VURGUSU / FİYAT SORUNUZ) */}
           <div className="mt-auto pt-3 border-t border-slate-100 flex flex-col">
-            {isDiscounted && quote && (
-              <div className="text-xs text-slate-400 line-through font-semibold">
-                {quote.listUnitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
-              </div>
-            )}
+            {quote && quote.unitNetExVat > 0 ? (
+              <>
+                {isDiscounted && (
+                  <div className="text-xs text-slate-400 line-through font-semibold">
+                    {quote.listUnitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+                  </div>
+                )}
 
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-lg md:text-xl font-black text-slate-900 tracking-tight">
-                {quote
-                  ? quote.unitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })
-                  : '1.250,00'}{' '}
-                {currencySymbol}
-              </span>
-              <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                + KDV
-              </span>
-            </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-lg md:text-xl font-black text-slate-900 tracking-tight">
+                    {quote.unitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
+                    {currencySymbol}
+                  </span>
+                  <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                    + KDV
+                  </span>
+                </div>
 
-            {quote && (
-              <div className="text-[10px] text-slate-400 mt-0.5">
-                KDV Dahil: {quote.lineGross.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+                <div className="text-[10px] text-slate-400 mt-0.5">
+                  KDV Dahil: {quote.lineGross.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+                </div>
+              </>
+            ) : (
+              <div className="py-1">
+                <span className="inline-block text-base font-extrabold text-blue-600 bg-blue-50/80 px-3 py-1 rounded-xl border border-blue-200">
+                  Fiyat Sorunuz
+                </span>
+                <div className="text-[10px] text-slate-400 mt-1">Anlık stok ve fiyat bilgisi için sorunuz</div>
               </div>
             )}
           </div>

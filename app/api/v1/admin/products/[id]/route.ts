@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = getSessionUser(req);
-    if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     const resolvedParams = await Promise.resolve(params);
@@ -42,8 +42,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = getSessionUser(req);
-    if (session && session.role !== 'ADMIN' && session.role !== 'STAFF') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'STAFF')) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     const resolvedParams = await Promise.resolve(params);
@@ -121,8 +121,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = getSessionUser(req);
-    if (session && session.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 });
+    if (!session || session.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
     }
 
     const resolvedParams = await Promise.resolve(params);
