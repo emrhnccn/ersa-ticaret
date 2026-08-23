@@ -5,12 +5,16 @@ import { useAuth } from '@/context/AuthContext';
 import { MessageCircle, ShoppingCart, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ProductCard({ product }: { product: any }) {
-  const [imgSrc, setImgSrc] = useState(
-    product.imageUrl || product.image || (product.images && product.images[0]?.url) || 'https://placehold.co/400x400'
-  );
+  const targetImg = product.imageUrl || product.image || (product.images && product.images[0]?.url) || 'https://placehold.co/400x400/f8fafc/94a3b8?text=Gorsel+Yok';
+  const [imgSrc, setImgSrc] = useState(targetImg);
+
+  useEffect(() => {
+    setImgSrc(product.imageUrl || product.image || (product.images && product.images[0]?.url) || 'https://placehold.co/400x400/f8fafc/94a3b8?text=Gorsel+Yok');
+  }, [product.id, product.slug, product.imageUrl, product.image]);
+
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const { isB2B, user } = useAuth();
@@ -62,8 +66,8 @@ export default function ProductCard({ product }: { product: any }) {
             src={imgSrc}
             alt={product.name || product.title || 'Yedek Parça'}
             fill
+            unoptimized
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            quality={80}
             className="object-contain p-4 group-hover:scale-110 transition-transform duration-500 ease-out"
             onError={() => {
               setImgSrc('https://placehold.co/400x400/f8fafc/94a3b8?text=Gorsel+Yok');

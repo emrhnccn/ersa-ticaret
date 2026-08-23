@@ -136,7 +136,7 @@ export default function SepetPage() {
                     {/* Ürün Görseli & Başlık */}
                     <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
                       <div className="w-20 h-20 bg-slate-50 border border-slate-100 rounded-2xl p-2 flex items-center justify-center shrink-0 relative overflow-hidden">
-                        <Image src={item.image || 'https://placehold.co/400x400'} alt={item.name} fill sizes="80px" className="object-contain p-1" />
+                        <Image src={item.image || 'https://placehold.co/400x400'} alt={item.name} fill unoptimized sizes="80px" className="object-contain p-1" />
                       </div>
                       <div>
                         <span className="text-[10px] font-extrabold bg-blue-50 text-blue-700 px-2 py-0.5 rounded uppercase tracking-wider">

@@ -234,7 +234,7 @@ export default function Header() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 relative shrink-0 bg-slate-50 rounded-lg overflow-hidden p-1 border border-slate-100">
-                        <Image src={p.imageUrl || 'https://placehold.co/400x400'} alt={p.name} fill sizes="40px" className="object-contain p-0.5" />
+                        <Image src={p.imageUrl || 'https://placehold.co/400x400'} alt={p.name} fill unoptimized sizes="40px" className="object-contain p-0.5" />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-slate-800 line-clamp-1">{p.name}</div>

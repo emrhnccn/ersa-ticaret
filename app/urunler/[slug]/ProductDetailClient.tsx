@@ -86,6 +86,7 @@ export default function ProductDetailClient({ product }: { product: any }) {
                 alt={product.name}
                 fill
                 priority
+                unoptimized
                 sizes="(max-width: 1024px) 100vw, 40vw"
                 className="object-contain group-hover:scale-110 transition-transform duration-500"
                 onError={() => setSelectedImg('https://placehold.co/500x500/f8fafc/94a3b8?text=Gorsel+Yok')}
@@ -110,7 +111,7 @@ export default function ProductDetailClient({ product }: { product: any }) {
                     onClick={() => setSelectedImg(img.url)}
                     className={`w-16 h-16 rounded-xl border-2 p-1 bg-white shrink-0 transition-all relative overflow-hidden ${selectedImg === img.url ? 'border-blue-600 shadow-md' : 'border-slate-200 opacity-70 hover:opacity-100'}`}
                   >
-                    <Image src={img.url} alt="" fill sizes="64px" className="object-contain" />
+                    <Image src={img.url} alt="" fill unoptimized sizes="64px" className="object-contain" />
                   </button>
                 ))}
               </div>
