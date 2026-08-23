@@ -159,9 +159,30 @@ body {
 }
 
 .pagination-btn-active {
-  @apply bg-blue-600 text-white shadow-lg shadow-blue-600/20;
+  @apply bg-pcb-900 text-white shadow-lg shadow-pcb-900/20;
 }
 
 .pagination-btn-inactive {
-  @apply bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50;
+  @apply bg-white text-slate-600 border border-slate-200 hover:border-pcb-600 hover:text-pcb-900 hover:bg-pcb-50;
+}
+
+/* ==========================================
+   TEKNİK DEVRE & BLUEPRINT ÇİZİM DESENLERİ
+   ========================================== */
+.bg-blueprint-grid {
+  background-color: #090d16;
+  background-image: 
+    linear-gradient(rgba(15, 81, 50, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 81, 50, 0.22) 1px, transparent 1px),
+    linear-gradient(rgba(194, 112, 61, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(194, 112, 61, 0.09) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px, 12px 12px, 12px 12px;
+  background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+}
+
+.bg-circuit-subtle {
+  background-color: #0f172a;
+  background-image: radial-gradient(rgba(22, 163, 74, 0.25) 1px, transparent 1px), radial-gradient(rgba(194, 112, 61, 0.15) 1px, #0f172a 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
 }

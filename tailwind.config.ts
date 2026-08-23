@@ -10,8 +10,41 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#2563eb',
-          dark: '#1e40af',
+          DEFAULT: '#0f5132', // PCB Kart Yeşili
+          dark: '#0a3d24',
+          light: '#146c43',
+        },
+        pcb: {
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          200: '#bbf7d0',
+          600: '#16a34a',
+          700: '#15803d',
+          800: '#146c43',
+          900: '#0f5132',
+          950: '#082f1d',
+        },
+        copper: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          500: '#d97706',
+          600: '#c2703d', // Bakır Sargı Turuncusu
+          700: '#9f5425',
+          800: '#7c3a16',
+          900: '#431407',
+        },
+        tech: {
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          800: '#1e293b',
+          900: '#0f172a',
+          950: '#090d16',
+        },
+        wa: {
+          DEFAULT: '#25D366',
+          dark: '#1ea952',
+          light: '#42e37e',
         },
       },
       // Kendi özel animasyonlarımızı buraya ekliyoruz

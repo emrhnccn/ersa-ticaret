@@ -1,190 +1,258 @@
 'use client';
-import { Store, ShieldCheck, Truck, X } from 'lucide-react';
+import { ShieldCheck, Truck, Clock, MessageCircle, X, Eye } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
 
+interface TourPhoto {
+  src: string;
+  title: string;
+  desc: string;
+}
+
+const STORE_TOUR_PHOTOS: TourPhoto[] = [
+  { src: '/magaza/1.jpeg', title: 'Kombi Elektronik Anakart Raf Sistemi', desc: 'Vaillant, Demirdöküm, Bosch ve E.C.A dahil 800+ farklı model anakart rafta hazır.' },
+  { src: '/magaza/4.jpeg', title: 'Beyaz Eşya Motor & Pompa Reyonu', desc: 'Çamaşır ve bulaşık makinesi sirkülasyon pompaları, ventil grupları ve tahliye motorları.' },
+  { src: '/magaza/7.jpeg', title: 'Darıca Satış & Usta Karşılama Tezgahı', desc: 'Bölgedeki kombi ve beyaz eşya servislerinin günlük parça temin merkezi.' },
+  { src: '/magaza/10.jpeg', title: 'Test & Kalite Kontrol Masası', desc: 'Tüm elektronik kartlar ve bobinler usta eline geçmeden önce voltaj ve röle testinden geçer.' },
+  { src: '/magaza/14.jpeg', title: 'Sensör, Vana & Conta Çekmeceleri', desc: 'NTC sensörler, 3 yollu vana motorları, prosestatlar ve emniyet ventilleri.' },
+  { src: '/magaza/18.jpeg', title: 'Günlük Kargo & Hızlı Sevkiyat Masası', desc: 'Saat 16:00\'a kadar verilen siparişler aynı gün Türkiye\'nin her yerine kargolanır.' },
+];
+
 export default function KurumsalPage() {
-  const photos = Array.from({ length: 20 }, (_, i) => `/magaza/${i + 1}.jpeg`);
+  const allPhotos = Array.from({ length: 20 }, (_, i) => `/magaza/${i + 1}.jpeg`);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [showAllGallery, setShowAllGallery] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      
-      {/* --- YENİ: KOYU VE GÖSTERİŞLİ TEPE ALANI (HERO) --- */}
-      <div className="bg-slate-900 pt-20 pb-40 relative overflow-hidden">
-        {/* Arka plan süsleri */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none opacity-40">
-          <div className="absolute -top-[50%] -right-[10%] w-[70%] h-[100%] rounded-full bg-blue-600/30 blur-[100px] animate-pulse" style={{ animationDuration: '5s' }} />
-          <div className="absolute top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-rose-600/20 blur-[100px] animate-pulse" style={{ animationDuration: '7s', animationDelay: '1s' }} />
-        </div>
-
+      {/* 1. TEKNİK ATÖLYE & BLUEPRINT HERO */}
+      <div className="bg-slate-950 bg-blueprint-grid pt-20 pb-36 relative overflow-hidden border-b border-slate-800">
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-          <div className="animate-fade-in-up inline-flex items-center justify-center w-16 h-16 bg-white/10 text-blue-400 rounded-2xl mb-6 backdrop-blur-sm border border-white/10 shadow-lg shadow-blue-500/20">
-            <Store size={32} className="animate-bounce" style={{ animationDuration: '3s' }} />
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-pcb-900/60 border border-pcb-700/60 rounded-full text-emerald-400 text-xs font-bold font-mono mb-6">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            DARICA / KOCAELİ MERKEZ DEPO
           </div>
-          <h1 className="animate-fade-in-up-delay-1 text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight drop-shadow-md">
-            Ersa Ticaret'e <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-rose-400">Hoş Geldiniz</span>
+          <h1 className="text-3xl md:text-5xl font-black text-white mb-5 tracking-tight">
+            15 Yıllık Esnaf Güveniyle <br className="hidden sm:inline" />
+            <span className="text-copper-400">Teknik Parça &amp; Elektronik Kart Üssü</span>
           </h1>
-          <p className="animate-fade-in-up-delay-2 text-slate-300 text-lg md:text-xl leading-relaxed font-medium drop-shadow-sm">
-            Darıca ve Kocaeli bölgesinde, kombi ve beyaz eşya yedek parça tedariğinde kaliteli ürün, dürüst ticaret ve güvenilir esnaflık anlayışıyla hizmetinizdeyiz.
+          <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
+            Kombi anakartlarından beyaz eşya motorlarına; ustanın dilinden anlayan esnaflık, doğru teşhis ve doğrudan toptan tedarik güvencesi.
           </p>
         </div>
       </div>
 
-      {/* --- İÇERİK ALANI (TAŞMA EFEKTİ İLE) --- */}
-      <div className="max-w-7xl mx-auto px-4 relative z-20 -mt-24 w-full mb-20">
-        
+      {/* 2. İÇERİK ALANI */}
+      <div className="max-w-6xl mx-auto px-4 relative z-20 -mt-20 w-full mb-20">
         {/* KURUCU (SADIK AKGÜMÜŞ) KARTI */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-2xl shadow-slate-900/10 border border-slate-100 mb-16 flex flex-col md:flex-row items-center gap-8 md:gap-12 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/80 rounded-full blur-3xl -mr-20 -mt-20 z-0 transition-transform group-hover:scale-110 duration-700 pointer-events-none" />
-
-          <div className="relative z-10 shrink-0">
-            <div className="w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white shadow-xl shadow-slate-300 relative bg-slate-100">
+        <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-200/80 mb-16 flex flex-col md:flex-row items-center gap-8 md:gap-10">
+          <div className="relative shrink-0">
+            <div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border-4 border-slate-100 shadow-md relative bg-slate-100">
               <Image
-                src="/sadik-bey.jpg" 
-                alt="Sadık Akgümüş"
+                src="/sadik-bey.jpg"
+                alt="Sadık Akgümüş - Ersa Ticaret Kurucusu"
                 fill
-                sizes="(max-width: 768px) 160px, 192px"
+                sizes="(max-width: 768px) 144px, 176px"
                 className="object-cover"
               />
             </div>
-            <div className="absolute bottom-2 md:bottom-4 right-0 md:right-2 bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md border-2 border-white z-10">
-              Kurucu
+            <div className="absolute -bottom-2 -right-2 bg-slate-900 text-copper-300 text-[11px] font-mono font-bold px-3 py-1 rounded-lg border border-slate-700 shadow">
+              Kurucu &amp; Usta
             </div>
           </div>
 
-          <div className="relative z-10 text-center md:text-left flex-1">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">Sadık Akgümüş</h2>
-            <p className="text-blue-600 font-semibold mb-4 text-sm md:text-base uppercase tracking-wider">Ersa Ticaret İşletme Sahibi</p>
-            <p className="text-slate-600 leading-relaxed text-lg">
-              Yıllarını ısıtma, soğutma ve beyaz eşya sektörüne adamış olan Sadık Akgümüş, Ersa Ticaret'in temellerini <strong>"dürüst esnaflık ve karşılıklı güven"</strong> ilkesiyle atmıştır. Bölgedeki teknik servislerin ve bireysel müşterilerin parça ihtiyacını en hızlı şekilde çözmeyi misyon edinen Akgümüş, tecrübesiyle sektörde güvenilir bir çözüm ortağı olmaya devam etmektedir.
+          <div className="text-center md:text-left flex-1">
+            <div className="text-xs font-bold text-copper-600 uppercase tracking-widest mb-1 font-mono">
+              BÖLGENİN GÜVENİLİR YEDEK PARÇA ESNAFI
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-3">Sadık Akgümüş</h2>
+            <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+              Yıllarını kombi, beyaz eşya ve ısıtma sektörünün mutfağında geçiren Sadık Akgümüş, Ersa Ticaret&apos;i <strong>&ldquo;parçayı satan değil, arızayı çözen esnaf&rdquo;</strong> anlayışıyla kurmuştur. Darıca&apos;daki mağazamızda teknik servis ustalarına ve bölge halkına sadece parça vermiyor; doğru teşhis ve uyumlu soket teyidiyle sahada zaman kaybını önlüyoruz.
             </p>
           </div>
         </div>
 
-        {/* --- VİZYON / DUVAR TABLOLARI --- */}
-        <div className="relative py-16 md:py-20 rounded-[2.5rem] bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-200 shadow-inner overflow-hidden">
-          
-          <div className="absolute inset-0 opacity-30 mix-blend-multiply" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width=\\'20\\' height=\\'20\\' viewBox=\\'0 0 20 20\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cg fill=\\'%2394a3b8\\' fill-opacity=\\'0.4\\' fill-rule=\\'evenodd\\'%3E%3Ccircle cx=\\'3\\' cy=\\'3\\' r=\\'3\\'/%3E%3Ccircle cx=\\'13\\' cy=\\'13\\' r=\\'3\\'/%3E%3C/g%3E%3C/svg%3E')" }}></div>
-          
-          <div className="relative max-w-[90rem] mx-auto px-4 md:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-              
-              {/* 1. PANEL: BİZ */}
-              <div className="relative bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center md:items-stretch gap-6 md:gap-8 hover:-translate-y-1 transition-transform duration-500">
-                
-                <div className="hidden md:block absolute top-6 left-6 w-3 h-3 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)] border border-slate-300"></div>
-                <div className="hidden md:block absolute top-6 right-6 w-3 h-3 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)] border border-slate-300"></div>
-                <div className="hidden md:block absolute bottom-6 left-6 w-3 h-3 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)] border border-slate-300"></div>
-                <div className="hidden md:block absolute bottom-6 right-6 w-3 h-3 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)] border border-slate-300"></div>
+        {/* 3. 4 SOMUT ESNAFLIK & TOPTANCI İLKESİ */}
+        <div className="mb-20">
+          <div className="text-center mb-10">
+            <span className="text-xs font-mono font-bold text-pcb-900 bg-pcb-50 px-3 py-1 rounded-md border border-pcb-200 uppercase tracking-wider">
+              Çalışma Felsefemiz
+            </span>
+            <h3 className="text-2xl md:text-3xl font-black text-slate-900 mt-2">
+              Sözümüzü Laf ile Değil, Sahada Tutarız
+            </h3>
+            <p className="text-slate-500 text-xs md:text-sm mt-1 max-w-xl mx-auto">
+              Kurumsal sloganlar yerine teknik servislerin her gün yaşadığı problemlere 4 net taahhüt sunuyoruz.
+            </p>
+          </div>
 
-                <div className="flex items-center justify-center md:w-1/4 shrink-0">
-                  <span className="text-8xl xl:text-[9rem] font-black leading-none text-slate-900 tracking-tighter" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', display: 'inline-block' }}>BİZ</span>
-                </div>
-
-                <div className="flex flex-col justify-center w-full md:w-3/4 space-y-1 md:space-y-1.5 text-center md:text-left select-none">
-                  <p className="text-xl md:text-[2.2rem] xl:text-[2.6rem] leading-none font-black tracking-tighter text-slate-900 uppercase">ÇEVİK BİR TAKIMIZ</p>
-                  <p className="text-base md:text-[1.4rem] xl:text-[1.65rem] leading-none font-semibold italic tracking-tight text-slate-700 uppercase">HER ZAMAN POZİTİF BAKARIZ</p>
-                  <p className="text-lg md:text-[1.8rem] xl:text-[2.1rem] leading-none font-extrabold tracking-tight text-slate-800 uppercase">İŞİMİZİ TUTKUYLA YAPARIZ</p>
-                  <p className="text-base md:text-[1.6rem] xl:text-[1.85rem] leading-none font-black italic tracking-tighter text-slate-900 uppercase">DEĞERLERİMİZE BAĞLIYIZ</p>
-                  <p className="text-2xl md:text-[2.4rem] xl:text-[2.8rem] leading-none font-black tracking-normal text-slate-900 uppercase">SÖZÜMÜZÜ TUTARIZ</p>
-                  <p className="text-lg md:text-[1.8rem] xl:text-[2.15rem] leading-none font-bold italic tracking-tighter text-slate-800 uppercase">PROAKTİF YAKLAŞIRIZ</p>
-                  <p className="text-sm md:text-[1.3rem] xl:text-[1.5rem] leading-none font-bold tracking-wide text-slate-700 uppercase">YENİLİKLERİN PEŞİNDEN KOŞARIZ</p>
-                  <p className="text-2xl md:text-[2.6rem] xl:text-[3.2rem] leading-none font-black italic tracking-tighter text-slate-900 uppercase">ÇÖZÜM ODAKLIYIZ</p>
-                  <p className="text-lg md:text-[1.8rem] xl:text-[2.15rem] leading-none font-bold tracking-tight text-slate-800 uppercase">ZORLUKLARA DAYANIRIZ</p>
-                  <p className="text-xs md:text-[1.1rem] xl:text-[1.35rem] leading-none font-black italic tracking-tight text-slate-700 uppercase">KARARLARIMIZI #HEPBİRLİKTE ALIRIZ</p>
-                  <p className="text-base md:text-[1.6rem] xl:text-[1.9rem] leading-none font-extrabold tracking-tight text-slate-900 uppercase">BAŞARILARIMIZI KEYİFLE KUTLARIZ</p>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* İlke 1 */}
+            <div className="bg-white p-7 rounded-2xl border border-slate-200/90 shadow-sm hover:border-pcb-700 hover:shadow-md transition-all">
+              <div className="w-12 h-12 rounded-xl bg-pcb-50 text-pcb-900 flex items-center justify-center mb-4 border border-pcb-200 font-bold">
+                <Clock size={24} />
               </div>
+              <h4 className="text-lg font-black text-slate-900 mb-2">
+                1. Bugün Sipariş, Bugün Elden &amp; Depodan Teslim
+              </h4>
+              <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
+                Müşterisinin kombisi kış günü duran teknik servisi bekletmeyiz. Darıca, Gebze ve Çayırova bölgesindeki acil parça ihtiyaçlarını dakikalar içinde raftan teslim ediyoruz.
+              </p>
+            </div>
 
-              {/* 2. PANEL: İLKELER */}
-              <div className="relative bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center md:items-stretch gap-6 md:gap-8 hover:-translate-y-1 transition-transform duration-500">
-                
-                <div className="hidden md:block absolute top-6 left-6 w-3 h-3 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)] border border-slate-300"></div>
-                <div className="hidden md:block absolute top-6 right-6 w-3 h-3 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)] border border-slate-300"></div>
-                <div className="hidden md:block absolute bottom-6 left-6 w-3 h-3 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)] border border-slate-300"></div>
-                <div className="hidden md:block absolute bottom-6 right-6 w-3 h-3 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 shadow-[inset_0_-1px_2px_rgba(0,0,0,0.3)] border border-slate-300"></div>
-
-                <div className="flex items-center justify-center md:w-1/4 shrink-0">
-                  <span className="text-7xl xl:text-[7rem] font-black leading-none text-slate-900 tracking-tighter" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', display: 'inline-block' }}>İLKELER</span>
-                </div>
-
-                <div className="flex flex-col justify-center w-full md:w-3/4 space-y-1.5 md:space-y-2 text-center md:text-left select-none">
-                  <p className="text-lg md:text-[1.5rem] xl:text-[1.7rem] leading-none font-black tracking-tight text-slate-900 uppercase">STRATEJİK DÜŞÜNÜR, PLANLI HAREKET EDERİZ</p>
-                  <p className="text-base md:text-[1.2rem] xl:text-[1.3rem] leading-none font-semibold italic tracking-tight text-slate-700 uppercase">KALİTEYİ HER SÜRECİMİZİN MERKEZİNE KOYARIZ</p>
-                  <p className="text-lg md:text-[1.5rem] xl:text-[1.7rem] leading-none font-extrabold tracking-tight text-slate-800 uppercase">SORUMLULUK ALIR, SONUÇ ODAKLI ÇALIŞIRIZ</p>
-                  <p className="text-base md:text-[1.3rem] xl:text-[1.4rem] leading-none font-black italic tracking-tighter text-slate-900 uppercase">İŞİMİZE DEĞER KATAR, FARK YARATAN ÇÖZÜMLER ÜRETİRİZ</p>
-                  <p className="text-xl md:text-[1.6rem] xl:text-[1.8rem] leading-none font-black tracking-tighter text-slate-900 uppercase">GÜVENİLİRLİK VE ŞEFFAFLIK TEMEL PRENSİPLERİMİZDİR</p>
-                  <p className="text-base md:text-[1.2rem] xl:text-[1.35rem] leading-none font-bold italic tracking-tighter text-slate-800 uppercase">ZAMANI ETKİN KULLANIR, VERİMLİLİĞİ ÖN PLANDA TUTARIZ</p>
-                  <p className="text-sm md:text-[1.1rem] xl:text-[1.2rem] leading-none font-bold tracking-tight text-slate-700 uppercase">YENİLİKÇİ BAKIŞ AÇISIYLA SÜREKLİ İLERLEMEYİ HEDEFLERİZ</p>
-                  <p className="text-lg md:text-[1.4rem] xl:text-[1.6rem] leading-none font-black italic tracking-tight text-slate-900 uppercase">KURUMSAL STANDARTLARA BAĞLI SÜRDÜRÜLEBİLİR BAŞARI SAĞLARIZ</p>
-                  <p className="text-base md:text-[1.3rem] xl:text-[1.5rem] leading-none font-bold tracking-tight text-slate-800 uppercase">İŞ BİRLİĞİ İLE DAHA GÜÇLÜ SONUÇLAR ELDE EDERİZ</p>
-                  <p className="text-sm md:text-[1.2rem] xl:text-[1.3rem] leading-none font-black italic tracking-tight text-slate-700 uppercase">PROFESYONELLİĞİ HER ALANDA ÖNCELİK HALİNE GETİRİRİZ</p>
-                </div>
+            {/* İlke 2 */}
+            <div className="bg-white p-7 rounded-2xl border border-slate-200/90 shadow-sm hover:border-copper-600 hover:shadow-md transition-all">
+              <div className="w-12 h-12 rounded-xl bg-copper-50 text-copper-700 flex items-center justify-center mb-4 border border-copper-200 font-bold">
+                <ShieldCheck size={24} />
               </div>
+              <h4 className="text-lg font-black text-slate-900 mb-2">
+                2. Doğru Teşhis, Birebir Uyum Garantisi
+              </h4>
+              <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
+                &ldquo;Bu kart uyar mı?&rdquo; tereddüdünü bitiriyoruz. Cihaz modeli ve seri numarasını teyit ederek doğru revizyonlu kartı verir, ustanın sahada ikinci kez gitmesini önleriz.
+              </p>
+            </div>
 
+            {/* İlke 3 */}
+            <div className="bg-white p-7 rounded-2xl border border-slate-200/90 shadow-sm hover:border-pcb-700 hover:shadow-md transition-all">
+              <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-4 font-bold">
+                <Truck size={24} />
+              </div>
+              <h4 className="text-lg font-black text-slate-900 mb-2">
+                3. Doğrudan Toptancı Fiyatı &amp; Şeffaf İskonto
+              </h4>
+              <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
+                Aracı ve komisyoncu olmadan doğrudan birinci el toptan fiyatlarla çalışırız. B2B anlaşmalı bayilerimize net iskonto ve vadeli cari hesap kolaylığı sağlarız.
+              </p>
+            </div>
+
+            {/* İlke 4 */}
+            <div className="bg-white p-7 rounded-2xl border border-slate-200/90 shadow-sm hover:border-emerald-600 hover:shadow-md transition-all">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-4 border border-emerald-200 font-bold">
+                <MessageCircle size={24} />
+              </div>
+              <h4 className="text-lg font-black text-slate-900 mb-2">
+                4. Usta Ustayı Anlar: WhatsApp&apos;tan Fotoğraf Atın
+              </h4>
+              <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
+                Kodu silinmiş veya yanmış kartın fotoğrafını WhatsApp hattımıza göndermeniz yeterli. Ekibimiz parçayı anında tanır, muadilini ve stok durumunu hemen iletir.
+              </p>
             </div>
           </div>
         </div>
 
-      </div>
+        {/* 4. MAĞAZADA BİR TUR */}
+        <div>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <span className="text-xs font-mono font-bold text-copper-600 uppercase tracking-wider">
+                Fiziki Stoklarımız
+              </span>
+              <h3 className="text-2xl md:text-3xl font-black text-slate-900 mt-1">
+                Mağazada Bir Tur
+              </h3>
+              <p className="text-slate-500 text-xs md:text-sm mt-1">
+                Darıca mağazamızdaki 3.600+ parça stoğunu ve çalışma alanlarımızı keşfedin.
+              </p>
+            </div>
 
-      {/* --- YENİ KOYU BANT: FOTOĞRAF GALERİSİ --- */}
-      <div className="bg-slate-900 py-20 mt-auto">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-white mb-4">Mağazamızdan Kareler</h2>
-            <p className="text-slate-400">Dükkanımızı ve geniş ürün yelpazemizi yakından inceleyin.</p>
+            <button
+              type="button"
+              onClick={() => setShowAllGallery(!showAllGallery)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-pcb-900 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+            >
+              <Eye size={15} />
+              {showAllGallery ? 'Turu Kısalt' : 'Tüm 20 Mağaza Fotoğrafını Gör'}
+            </button>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {photos.map((photo, index) => (
-              <div 
-                key={index} 
-                className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-800 shadow-lg border border-slate-700 hover:border-slate-500 transition-all duration-300 cursor-pointer"
-                onClick={() => setSelectedPhoto(photo)}
+
+          {/* 6 Hikayeli Kare */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {STORE_TOUR_PHOTOS.map((tour, index) => (
+              <div
+                key={index}
+                onClick={() => setSelectedPhoto(tour.src)}
+                className="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-pcb-700 transition-all duration-300 cursor-pointer flex flex-col"
               >
-                <div className="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-500/20 transition-colors z-10" />
-                <Image 
-                  src={photo} 
-                  alt={`Ersa Ticaret Mağaza Görseli ${index + 1}`}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  quality={75}
-                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out opacity-80 group-hover:opacity-100"
-                />
+                <div className="aspect-[4/3] relative overflow-hidden bg-slate-100">
+                  <Image
+                    src={tour.src}
+                    alt={tour.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm text-copper-300 font-mono text-[10px] font-bold px-2 py-0.5 rounded">
+                    0{index + 1}
+                  </div>
+                </div>
+                <div className="p-4 flex flex-col flex-grow">
+                  <h4 className="font-bold text-slate-900 text-sm mb-1 group-hover:text-pcb-900 transition-colors">
+                    {tour.title}
+                  </h4>
+                  <p className="text-slate-500 text-xs leading-relaxed">
+                    {tour.desc}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
+
+          {/* Tüm 20 Fotoğraf Genişletilmiş Görünümü */}
+          {showAllGallery && (
+            <div className="mt-10 p-6 bg-slate-900 rounded-3xl border border-slate-800 animate-in fade-in duration-300">
+              <div className="text-white font-bold text-base mb-4 flex items-center justify-between">
+                <span>Tüm Mağaza Arşivi (20 Fotoğraf)</span>
+                <span className="text-xs text-slate-400 font-mono font-normal">Tıklayarak büyütebilirsiniz</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                {allPhotos.map((photo, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setSelectedPhoto(photo)}
+                    className="aspect-square relative rounded-xl overflow-hidden bg-slate-800 cursor-pointer border border-slate-700 hover:border-copper-400 transition-all hover:scale-105"
+                  >
+                    <Image
+                      src={photo}
+                      alt={`Ersa Ticaret Mağaza Fotoğrafı ${i + 1}`}
+                      fill
+                      sizes="150px"
+                      className="object-cover opacity-80 hover:opacity-100"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* BÜYÜTÜLMÜŞ FOTOĞRAF EKRANI (LIGHTBOX) */}
+      {/* LIGHTBOX MODAL */}
       {selectedPhoto && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4 md:p-10 transition-all duration-300"
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4 md:p-10"
           onClick={() => setSelectedPhoto(null)}
         >
-          <button 
-            className="absolute top-6 right-6 p-2 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all z-20"
+          <button
+            type="button"
+            className="absolute top-6 right-6 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all z-20"
             onClick={() => setSelectedPhoto(null)}
           >
-            <X size={32} />
+            <X size={28} />
           </button>
           <div className="relative w-full max-w-4xl h-[75vh] max-h-[800px]">
-            <Image 
-              src={selectedPhoto} 
-              alt="Büyütülmüş Görsel" 
+            <Image
+              src={selectedPhoto}
+              alt="Büyütülmüş Görsel"
               fill
+              unoptimized
               sizes="90vw"
-              quality={90}
-              className="object-contain rounded-xl shadow-2xl ring-1 ring-white/10 transform scale-100 animate-in zoom-in-95 duration-200"
-              onClick={(e) => e.stopPropagation()} 
+              className="object-contain rounded-xl"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </div>
       )}
-
     </div>
   );
 }

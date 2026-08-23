@@ -122,19 +122,19 @@ export default function ProductCatalogClient({
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* HERO / TEPE BİLGİLENDİRME */}
-      <div className="bg-slate-900 pt-12 pb-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 backdrop-blur-3xl"></div>
+      {/* HERO / TEPE BİLGİLENDİRME (BLUEPRINT GRID) */}
+      <div className="bg-slate-950 bg-blueprint-grid pt-12 pb-24 relative overflow-hidden border-b border-slate-800">
         <div className="relative z-10 max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold mb-3 border border-blue-500/30">
-              <Sparkles size={14} /> Toptan &amp; Perakende Satış Kataloğu
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-pcb-900/60 border border-pcb-700/60 text-emerald-400 rounded-full text-xs font-mono font-bold mb-3">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              3.600+ PARÇA ANLIK STOK KATALOĞU
             </div>
             <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
-              Yedek Parça <span className="text-blue-400">Kataloğu</span>
+              Yedek Parça <span className="text-copper-400">Kataloğu</span>
             </h1>
-            <p className="text-slate-400 text-sm md:text-base mt-2 max-w-xl">
-              Kombi elektronik kartları, beyaz eşya motorları, vanalar ve teknik servis ekipmanları.
+            <p className="text-slate-300 text-sm md:text-base mt-2 max-w-xl">
+              Kombi elektronik anakartları, beyaz eşya motorları, sirkülasyon pompaları ve servis malzemeleri.
             </p>
           </div>
 

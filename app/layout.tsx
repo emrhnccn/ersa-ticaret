@@ -68,6 +68,8 @@ export const metadata: Metadata = {
   },
 };
 
+import WhatsAppFloat from '@/components/WhatsAppFloat';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const localBusinessSchema = {
     '@context': 'https://schema.org',
@@ -120,6 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {children}
               </main>
               <Footer />
+              <WhatsAppFloat />
             </ToastProvider>
           </CartProvider>
         </AuthProvider>

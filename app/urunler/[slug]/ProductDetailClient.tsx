@@ -44,8 +44,9 @@ export default function ProductDetailClient({ product }: { product: any }) {
     showToast(`✓ ${quantity} adet "${product.name}" sepete eklendi`);
   };
 
-  const whatsappMessage = `Merhaba, Ersa Ticaret sitenizden ürün hakkında bilgi almak istiyorum.\n\nÜrün Kodu: ${product.sku}\nÜrün Adı: ${product.name}\nLink: https://ersaticaret.com/urunler/${product.slug}`;
+  const whatsappMessage = `Merhaba, Ersa Ticaret sitenizden ürün hakkında bilgi almak istiyorum.\n\nÜrün Kodu: ${product.sku}\nÜrün Adı: ${product.name}\nLink: https://www.ersaticaret.com/urunler/${product.slug}`;
   const whatsappUrl = `https://wa.me/905525843073?text=${encodeURIComponent(whatsappMessage)}`;
+  const waLink = whatsappUrl;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-20">
@@ -151,58 +152,90 @@ export default function ProductDetailClient({ product }: { product: any }) {
               </div>
             )}
 
-            {/* FİYAT KUTUSU (KDV HARİÇ STANDARDI / FİYAT SORUNUZ) */}
+            {/* FİYAT KUTUSU (B2B vs B2C DİNAMİK HİYERARŞİ) */}
             <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-6">
               {quote && quote.unitNetExVat > 0 ? (
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                  <div>
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                      Birim Net Fiyat (KDV Hariç)
-                    </div>
-                    
-                    {isDiscounted && (
-                      <div className="text-sm text-slate-400 line-through font-semibold mb-0.5">
-                        {quote.listUnitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+                isB2B || user?.role === 'DEALER' || user?.role === 'ADMIN' || user?.role === 'STAFF' ? (
+                  /* B2B Bayi Görünümü: Net Fiyat Öncelikli */
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                      <div className="text-xs font-mono font-bold text-orange-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-600" />
+                        Bayi Net Alış Fiyatı (KDV Hariç)
                       </div>
-                    )}
+                      
+                      {isDiscounted && (
+                        <div className="text-sm text-slate-400 line-through font-semibold mb-0.5 font-mono">
+                          {quote.listUnitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+                        </div>
+                      )}
 
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-                        {quote.unitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
-                        {currencySymbol}
-                      </span>
-                      <span className="text-xs font-black text-amber-700 bg-amber-100 px-2 py-1 rounded-lg border border-amber-300">
-                        + %{quote?.vatRate || 20} KDV
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight font-mono">
+                          {quote.unitNetExVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
+                          {currencySymbol}
+                        </span>
+                        <span className="text-xs font-black text-orange-800 bg-orange-100 px-2 py-1 rounded-lg border border-orange-300">
+                          + %{quote?.vatRate || 20} KDV
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* KDV Tutarı & Genel Toplam Dağılımı */}
+                    <div className="text-left sm:text-right bg-white p-3.5 rounded-2xl border border-slate-200 text-xs space-y-1">
+                      <div className="text-slate-500">
+                        KDV Tutarı: <strong className="text-slate-800 font-mono">{(quote.vatAmount * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}</strong>
+                      </div>
+                      <div className="text-slate-900 font-black text-sm pt-1 border-t border-slate-100 font-mono">
+                        KDV Dahil: <span className="text-blue-900">{(quote.lineGross * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}</span>
+                      </div>
                     </div>
                   </div>
+                ) : (
+                  /* B2C Tüketici Görünümü: KDV Dahil Nihai Fiyat Öncelikli */
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                        Ödenecek Nihai Tutar (KDV Dahil)
+                      </div>
 
-                  {/* KDV Tutarı & Genel Toplam Dağılımı */}
-                  <div className="text-left sm:text-right bg-white p-3.5 rounded-2xl border border-slate-200 text-xs space-y-1">
-                    <div className="text-slate-500">
-                      KDV Tutarı: <strong className="text-slate-800">{(quote.vatAmount * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}</strong>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight font-mono">
+                          {(quote.lineGross * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}{' '}
+                          {currencySymbol}
+                        </span>
+                        <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-1 rounded-lg">
+                          KDV Dahil
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-slate-900 font-black text-sm pt-1 border-t border-slate-100">
-                      KDV Dahil: <span className="text-blue-600">{(quote.lineGross * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}</span>
+
+                    <div className="text-left sm:text-right bg-white p-3.5 rounded-2xl border border-slate-200 text-xs space-y-1 font-mono">
+                      <div className="text-slate-500">
+                        Net: {(quote.unitNetExVat * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+                      </div>
+                      <div className="text-slate-500">
+                        + KDV (%{quote.vatRate || 20}): {(quote.vatAmount * quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencySymbol}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )
               ) : (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
                     <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
                       Fiyat Bilgisi
                     </div>
-                    <span className="text-2xl md:text-3xl font-black text-blue-600">
+                    <span className="text-2xl md:text-3xl font-black text-blue-900">
                       Fiyat Sorunuz
                     </span>
-                    <p className="text-xs text-slate-500 mt-1">Bu ürün için güncel iskonto ve net fiyat almak için teknik ekibimizle iletişime geçiniz.</p>
+                    <p className="text-xs text-slate-500 mt-1">Bu ürün için güncel iskonto ve net parça fiyatı almak için arayınız.</p>
                   </div>
                   <a
                     href={waLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/20 flex items-center gap-2 transition-all shrink-0"
+                    className="px-6 py-3.5 bg-[#25D366] hover:bg-[#1ea952] text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all shrink-0"
                   >
                     <MessageCircle size={18} /> WhatsApp ile Fiyat Al
                   </a>
@@ -225,7 +258,7 @@ export default function ProductDetailClient({ product }: { product: any }) {
                   min={1}
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-16 text-center font-black text-slate-800 bg-transparent focus:outline-none text-base"
+                  className="w-16 text-center font-black text-slate-800 bg-transparent focus:outline-none text-base font-mono"
                 />
                 <button
                   onClick={() => setQuantity(q => q + 1)}
@@ -238,21 +271,27 @@ export default function ProductDetailClient({ product }: { product: any }) {
               {/* Sepete Ekle Butonu */}
               <button
                 onClick={handleAddToCart}
-                className="flex-1 w-full py-4 px-8 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-blue-600/25 active:scale-95 text-base"
+                disabled={!inStock}
+                className={`flex-1 w-full py-4 px-8 rounded-2xl font-black text-sm md:text-base flex items-center justify-center gap-3 transition-all shadow-xl active:scale-98 ${
+                  inStock
+                    ? 'bg-slate-900 hover:bg-blue-900 text-white shadow-slate-900/20'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                }`}
               >
                 <ShoppingCart size={20} />
-                Sepete Ekle ({((quote ? quote.lineGross : 1000) * quantity).toLocaleString('tr-TR')} {currencySymbol})
+                <span>{inStock ? 'Sepete Ekle' : 'Stokta Yok (Temin Edilir)'}</span>
               </button>
 
-              {/* WhatsApp İle Fiyat Sor */}
+              {/* Hızlı WhatsApp Sipariş Butonu */}
               <a
-                href={whatsappUrl}
+                href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto p-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 text-sm"
+                className="py-4 px-6 bg-[#25D366] hover:bg-[#1ea952] text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 shrink-0 w-full sm:w-auto"
+                title="WhatsApp üzerinden ustanıza hızlıca danışın"
               >
-                <MessageCircle size={20} className="text-emerald-600" />
-                <span>WhatsApp Parça Sor</span>
+                <MessageCircle size={20} />
+                <span className="hidden sm:inline">WhatsApp</span>
               </a>
             </div>
 

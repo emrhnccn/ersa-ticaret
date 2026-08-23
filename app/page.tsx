@@ -97,7 +97,7 @@ export default async function Home() {
       `}</style>
 
       {/* --- VİTRİN HERO ALANI --- */}
-      <section className="relative overflow-hidden pt-24 pb-36 md:pt-32 md:pb-44 flex items-center justify-center min-h-[580px]">
+      <section className="relative overflow-hidden pt-24 pb-36 md:pt-32 md:pb-44 flex items-center justify-center min-h-[580px] bg-slate-950">
         <div className="absolute inset-0 z-0 scale-105 transform origin-bottom transition-transform duration-[20s] ease-out hover:scale-110">
           <Image
             src="/vitrin.png"
@@ -106,50 +106,46 @@ export default async function Home() {
             priority
             quality={80}
             sizes="100vw"
-            className="object-cover object-top"
+            className="object-cover object-top opacity-30 mix-blend-luminosity"
           />
         </div>
-        <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-[2px] z-10" />
         
-        {/* Renk Küreleri */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-10 pointer-events-none opacity-60">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/40 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-rose-600/30 blur-[120px] animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
-        </div>
+        {/* Blueprint Izgarası */}
+        <div className="absolute inset-0 bg-blueprint-grid opacity-75 z-10 pointer-events-none" />
 
         <div className="absolute bottom-0 left-0 w-full h-28 bg-gradient-to-t from-slate-50 to-transparent z-10" />
 
         <div className="relative z-20 max-w-5xl mx-auto px-4 flex flex-col items-center text-center">
-          <div className="inline-flex items-center justify-center px-6 py-2 mb-6 text-xs md:text-sm font-bold text-white bg-white/10 border border-white/20 rounded-full backdrop-blur-md shadow-2xl">
-            <span className="w-2 h-2 rounded-full bg-rose-500 mr-2 animate-pulse" />
-            Darıca &amp; Gebze Bölgesinin 1 Numaralı B2B &amp; B2C Parça Tedarikçisi
+          <div className="inline-flex items-center justify-center px-5 py-2 mb-6 text-xs md:text-sm font-bold text-copper-300 bg-slate-900/90 border border-slate-700 rounded-full font-mono shadow-2xl">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
+            DARICA &amp; GEBZE BÖLGESİ YEDEK PARÇA VE KART MERKEZİ
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 tracking-tight leading-[1.1] drop-shadow-2xl">
-            Beyaz Eşya ve Kombi <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-200 to-rose-400">
-              Yedek Parça Merkezi
+            Kombi Kartları ve <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-copper-300 via-amber-200 to-emerald-400">
+              Beyaz Eşya Yedek Parçası
             </span>
           </h1>
           
           <p className="text-slate-300 text-base md:text-xl max-w-3xl mx-auto mb-10 leading-relaxed font-medium">
-            Kombi elektronik anakartları, beyaz eşya motorları ve profesyonel teknik servis ekipmanları. Bayilere özel iskontolar ve aynı gün stoktan teslimat.
+            Vaillant, Bosch, Demirdöküm ve tüm markalara uyumlu orijinal &amp; revizyonlu anakartlar, motorlar, pompalar. Ustalara özel anlık toptan iskonto.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
             <Link
               href="/urunler"
-              className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-blue-600/30 active:scale-95 text-base"
+              className="w-full sm:w-auto px-8 py-4 bg-pcb-900 hover:bg-pcb-800 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-pcb-900/40 border border-pcb-700 active:scale-95 text-base"
             >
               <Package size={20} />
-              Kataloğu İncele
+              Yedek Parça Kataloğu
             </Link>
 
             <Link
               href="/b2b-basvuru"
               className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 border border-white/20 transition-all backdrop-blur-xl active:scale-95 text-base"
             >
-              <Building2 size={20} className="text-amber-400" />
+              <Building2 size={20} className="text-copper-400" />
               B2B Bayi Girişi &amp; Başvuru
             </Link>
           </div>
