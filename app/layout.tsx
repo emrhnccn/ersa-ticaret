@@ -20,7 +20,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ersaticaret.com'),
+  metadataBase: new URL('https://www.ersaticaret.com'),
+  alternates: {
+    canonical: 'https://www.ersaticaret.com',
+  },
   title: {
     default: "Ersa Ticaret | B2B & B2C Beyaz Eşya ve Kombi Yedek Parça Merkezi",
     template: "%s | Ersa Ticaret" 
@@ -46,7 +49,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "tr_TR",
-    url: "https://ersaticaret.com",
+    url: "https://www.ersaticaret.com",
     title: "Ersa Ticaret | B2B & B2C Yedek Parça Merkezi",
     description: "Kombi ve beyaz eşya yedek parçalarında toptan ve perakende satış. Binlerce parça anında stoktan teslim.",
     siteName: "Ersa Ticaret",
@@ -66,8 +69,47 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const localBusinessSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'AutoPartsStore',
+    name: 'Ersa Ticaret - Kombi & Beyaz Eşya Yedek Parça',
+    image: 'https://www.ersaticaret.com/vitrin.png',
+    '@id': 'https://www.ersaticaret.com/#store',
+    url: 'https://www.ersaticaret.com',
+    telephone: '+905525843073',
+    priceRange: '₺₺',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Fevziçakmak Mah. Dr. Zeki Acar Cad. No: 62/A',
+      addressLocality: 'Darıca',
+      addressRegion: 'Kocaeli',
+      postalCode: '41700',
+      addressCountry: 'TR',
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 40.7745,
+      longitude: 29.4055,
+    },
+    openingHoursSpecification: [
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        opens: '08:30',
+        closes: '19:00',
+      },
+    ],
+    sameAs: ['https://wa.me/905525843073'],
+  };
+
   return (
     <html lang="tr">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+        />
+      </head>
       <body className={`${inter.className} flex flex-col min-h-screen bg-slate-50 text-slate-900 antialiased`}>
         <AuthProvider>
           <CartProvider>

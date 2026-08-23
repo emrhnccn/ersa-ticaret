@@ -6,8 +6,17 @@ import type { Metadata } from 'next';
 export const revalidate = 60; // 60 saniye boyunca Edge CDN üzerinden 20ms'de anında sunulur
 
 export const metadata: Metadata = {
-  title: 'Yedek Parça Kataloğu | Kombi Anakart & Beyaz Eşya Parçaları',
+  title: 'Yedek Parça Kataloğu | Kombi Kartları & Beyaz Eşya Parçaları',
   description: 'Darıca Ersa Ticaret toptan ve perakende yedek parça kataloğu. Vaillant, Bosch, Demirdöküm, Arçelik kombi kartları, pompalar, vanalar ve servis ekipmanları.',
+  alternates: {
+    canonical: 'https://www.ersaticaret.com/urunler',
+  },
+  openGraph: {
+    title: 'Yedek Parça Kataloğu | Ersa Ticaret',
+    description: 'Kombi anakartları, beyaz eşya parçaları ve teknik servis malzemeleri.',
+    url: 'https://www.ersaticaret.com/urunler',
+    type: 'website',
+  },
 };
 
 interface UrunlerPageProps {

@@ -12,7 +12,17 @@ import {
   Sparkles
 } from 'lucide-react';
 
+import type { Metadata } from 'next';
+
 export const revalidate = 60; // 60 saniye boyunca Edge CDN üzerinden 20ms'de anında sunulur
+
+export const metadata: Metadata = {
+  title: 'Ersa Ticaret | B2B & B2C Beyaz Eşya ve Kombi Yedek Parça Merkezi',
+  description: 'Darıca ve Kocaeli bölgesinin lider toptan ve perakende kombi elektronik kartı, beyaz eşya yedek parçası ve teknik servis ekipmanı tedarikçisi. Özel bayi fiyatları ve anında stok teslimatı.',
+  alternates: {
+    canonical: 'https://www.ersaticaret.com',
+  },
+};
 
 export default async function Home() {
   let popularProducts: any[] = [];

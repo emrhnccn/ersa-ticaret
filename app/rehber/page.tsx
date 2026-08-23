@@ -3,8 +3,11 @@ import { blogPosts } from '@/lib/data';
 import { BookOpen, ChevronRight, Wrench } from 'lucide-react';
 
 export const metadata = {
-  title: 'Yedek Parça ve Tamir Rehberi | Ersa Ticaret',
+  title: 'Yedek Parça ve Tamir Rehberi | Kombi & Beyaz Eşya İpuçları',
   description: 'Kombi ve beyaz eşya arızaları, yedek parça seçim rehberi ve teknik servis ipuçları.',
+  alternates: {
+    canonical: 'https://www.ersaticaret.com/rehber',
+  },
 };
 
 export default function RehberPage() {

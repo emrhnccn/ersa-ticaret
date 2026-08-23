@@ -5,11 +5,22 @@ import { ArrowLeft, Clock, Share2, MessageCircle, ChevronRight, BookOpen } from 
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
   const post = blogPosts.find((p: { slug: string; }) => p.slug === params.slug);
-  if (!post) return { title: 'Yazı Bulunamadı | Ersa Ticaret' };
+  if (!post) return { title: 'Yazı Bulunamadı' };
   
+  const canonicalUrl = `https://www.ersaticaret.com/rehber/${params.slug}`;
+
   return {
-    title: `${post.title} | Ersa Ticaret Rehber`,
+    title: `${post.title} - Teknik Rehber`,
     description: post.description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${post.title} | Ersa Ticaret`,
+      description: post.description,
+      url: canonicalUrl,
+      type: 'article',
+    },
   };
 }
 
@@ -20,14 +31,39 @@ export default function RehberDetayPage({ params }: { params: { slug: string } }
     notFound();
   }
 
+  // Article Schema
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.description,
+    author: {
+      '@type': 'Organization',
+      name: 'Ersa Ticaret Teknik Ekibi',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Ersa Ticaret',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.ersaticaret.com/logo.png',
+      },
+    },
+    mainEntityOfPage: `https://www.ersaticaret.com/rehber/${post.slug}`,
+  };
+
   // Diğer rehberler (mevcut hariç)
   const otherPosts = blogPosts.filter((p) => p.slug !== post.slug).slice(0, 3);
 
-  const whatsappMessage = `Merhaba, Ersa Ticaret sitenizdeki "${post.title}" başlıklı rehberi okudum. Teknik destek ve parça durumu hakkında bilgi almak istiyorum.\n\nRehber Linki: https://ersaticaret.com/rehber/${post.slug}`;
+  const whatsappMessage = `Merhaba, Ersa Ticaret sitenizdeki "${post.title}" başlıklı rehberi okudum. Teknik destek ve parça durumu hakkında bilgi almak istiyorum.\n\nRehber Linki: https://www.ersaticaret.com/rehber/${post.slug}`;
   const whatsappUrl = `https://wa.me/905525843073?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       
       {/* ÜST BAR */}
       <div className="bg-slate-900 pt-8 pb-32 relative">
