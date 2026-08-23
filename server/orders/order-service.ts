@@ -490,7 +490,17 @@ export const orderService = {
       },
       orderBy: { createdAt: 'desc' },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: {
+              include: {
+                images: true,
+                brand: true,
+                category: true,
+              }
+            }
+          }
+        },
         invoices: true,
         shipments: true,
         address: true,

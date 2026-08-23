@@ -30,6 +30,7 @@ interface CartContextType {
   currency: string;
   setCurrency: (c: string) => void;
   addToCart: (product: any, qty?: number) => void;
+  addMultipleToCart: (items: { product: any; qty?: number }[]) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -88,6 +89,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       };
       saveCart([...cart, newItem]);
     }
+  };
+
+  const addMultipleToCart = (items: { product: any; qty?: number }[]) => {
+    let currentCart = [...cart];
+    for (const { product, qty = 1 } of items) {
+      const productId = product.id;
+      const existingIndex = currentCart.findIndex((item) => item.id === productId || item.slug === product.slug);
+
+      if (existingIndex > -1) {
+        currentCart[existingIndex].quantity += qty;
+        if (product.priceQuote) currentCart[existingIndex].priceQuote = product.priceQuote;
+      } else {
+        const newItem: CartItem = {
+          id: product.id,
+          slug: product.slug,
+          name: product.name || product.title,
+          sku: product.sku || product.code,
+          image: product.imageUrl || product.image || (product.images && product.images[0]?.url) || 'https://placehold.co/400x400',
+          brand: product.brandName || product.brand || 'Genel',
+          category: product.categoryName || product.category || 'Yedek Parça',
+          quantity: qty,
+          unit: product.unit || 'ADET',
+          priceQuote: product.priceQuote,
+        };
+        currentCart.push(newItem);
+      }
+    }
+    saveCart(currentCart);
   };
 
   const removeFromCart = (productId: string) => {
