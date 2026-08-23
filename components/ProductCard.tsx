@@ -93,11 +93,16 @@ export default function ProductCard({ product }: { product: any }) {
         {/* 3. BİLGİ ALANI (TEKNİK KÜNYE & BAŞLIK) */}
         <div className="p-4 flex-grow flex flex-col bg-white">
           <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-            {(product.brandName || product.brand) && (
-              <span className="inline-block px-2 py-0.5 bg-slate-900 text-copper-300 text-[10px] font-black uppercase tracking-wider rounded font-mono">
-                {product.brandName || product.brand}
-              </span>
-            )}
+            {(() => {
+              const rawBrand = product.brandName || (typeof product.brand === 'object' ? product.brand?.name : product.brand);
+              const brandText = typeof rawBrand === 'string' && rawBrand.trim() !== '' ? rawBrand.trim() : null;
+              if (!brandText) return null;
+              return (
+                <span className="inline-block px-2 py-0.5 bg-slate-900 text-amber-400 text-[10px] font-black uppercase tracking-wider rounded font-mono border border-slate-700">
+                  {brandText}
+                </span>
+              );
+            })()}
             <span className="inline-block px-2 py-0.5 bg-pcb-50 text-pcb-900 border border-pcb-200 text-[10px] font-bold uppercase rounded">
               {product.categoryName || product.category || 'Genel Parça'}
             </span>

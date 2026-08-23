@@ -116,14 +116,14 @@ export default async function Home() {
         <div className="absolute bottom-0 left-0 w-full h-28 bg-gradient-to-t from-slate-50 to-transparent z-10" />
 
         <div className="relative z-20 max-w-5xl mx-auto px-4 flex flex-col items-center text-center">
-          <div className="inline-flex items-center justify-center px-5 py-2 mb-6 text-xs md:text-sm font-bold text-copper-300 bg-slate-900/90 border border-slate-700 rounded-full font-mono shadow-2xl">
+          <div className="inline-flex items-center justify-center px-5 py-2 mb-6 text-xs md:text-sm font-bold text-amber-300 bg-slate-900/90 border border-slate-700 rounded-full font-mono shadow-2xl">
             <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
             DARICA &amp; GEBZE BÖLGESİ YEDEK PARÇA VE KART MERKEZİ
           </div>
           
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 tracking-tight leading-[1.1] drop-shadow-2xl">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 tracking-tight leading-[1.15] drop-shadow-2xl">
             Kombi Kartları ve <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-copper-300 via-amber-200 to-emerald-400">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-emerald-400">
               Beyaz Eşya Yedek Parçası
             </span>
           </h1>
@@ -145,7 +145,7 @@ export default async function Home() {
               href="/b2b-basvuru"
               className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 border border-white/20 transition-all backdrop-blur-xl active:scale-95 text-base"
             >
-              <Building2 size={20} className="text-copper-400" />
+              <Building2 size={20} className="text-amber-400" />
               B2B Bayi Girişi &amp; Başvuru
             </Link>
           </div>
