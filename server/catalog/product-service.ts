@@ -6,6 +6,10 @@ import * as React from 'react';
 
 const serverCache = typeof React.cache === 'function' ? React.cache : <T extends (...args: any[]) => any>(fn: T): T => fn;
 
+let memoryCategoriesCache: { data: any[]; fetchedAt: number } | null = null;
+let memoryBrandsCache: { data: any[]; fetchedAt: number } | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 dakika in-memory TTL
+
 export interface ProductFilterParams {
   search?: string;
   categorySlug?: string;
@@ -295,9 +299,13 @@ export const productService = {
   }),
 
   /**
-   * Kategorileri çeker (React cache ile istek bazlı tekilleştirilmiş).
+   * Kategorileri çeker (In-memory TTL + React cache ile optimize edilmiş).
    */
   getCategories: serverCache(async () => {
+    if (memoryCategoriesCache && Date.now() - memoryCategoriesCache.fetchedAt < CACHE_TTL_MS) {
+      return memoryCategoriesCache.data;
+    }
+
     try {
       const cats = await prisma.category.findMany({
         orderBy: { name: 'asc' },
@@ -308,22 +316,31 @@ export const productService = {
           _count: { select: { products: true } }
         }
       });
-      if (cats.length > 0) return cats;
+      if (cats.length > 0) {
+        memoryCategoriesCache = { data: cats, fetchedAt: Date.now() };
+        return cats;
+      }
     } catch {}
 
     const uniqueNames = Array.from(new Set(fallbackRawProducts.map(p => p.category))).filter(Boolean);
-    return uniqueNames.map(name => ({
+    const fallbackCats = uniqueNames.map(name => ({
       id: name.toLowerCase().replace(/\s+/g, '-'),
       name,
       slug: name.toLowerCase().replace(/\s+/g, '-'),
       _count: { products: 12 }
     }));
+    memoryCategoriesCache = { data: fallbackCats, fetchedAt: Date.now() };
+    return fallbackCats;
   }),
 
   /**
-   * Markaları çeker (React cache ile istek bazlı tekilleştirilmiş).
+   * Markaları çeker (In-memory TTL + React cache ile optimize edilmiş).
    */
   getBrands: serverCache(async () => {
+    if (memoryBrandsCache && Date.now() - memoryBrandsCache.fetchedAt < CACHE_TTL_MS) {
+      return memoryBrandsCache.data;
+    }
+
     try {
       const brands = await prisma.brand.findMany({
         orderBy: { name: 'asc' },
@@ -334,15 +351,20 @@ export const productService = {
           _count: { select: { products: true } }
         }
       });
-      if (brands.length > 0) return brands;
+      if (brands.length > 0) {
+        memoryBrandsCache = { data: brands, fetchedAt: Date.now() };
+        return brands;
+      }
     } catch {}
 
     const uniqueBrands = Array.from(new Set(fallbackRawProducts.map(p => p.brand))).filter(Boolean);
-    return uniqueBrands.map(name => ({
+    const fallbackBrands = uniqueBrands.map(name => ({
       id: name.toLowerCase().replace(/\s+/g, '-'),
       name,
       slug: name.toLowerCase().replace(/\s+/g, '-'),
       _count: { products: 5 }
     }));
+    memoryBrandsCache = { data: fallbackBrands, fetchedAt: Date.now() };
+    return fallbackBrands;
   })
 };

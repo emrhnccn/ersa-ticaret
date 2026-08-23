@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ShieldCheck,
   Truck,
@@ -80,10 +81,13 @@ export default function ProductDetailClient({ product }: { product: any }) {
           {/* SOL: GÖRSEL GALERİSİ (5 Kolon) */}
           <div className="lg:col-span-5 flex flex-col items-center">
             <div className="aspect-square w-full bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-center p-8 relative overflow-hidden group">
-              <img
+              <Image
                 src={selectedImg}
                 alt={product.name}
-                className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 40vw"
+                className="object-contain group-hover:scale-110 transition-transform duration-500"
                 onError={() => setSelectedImg('https://placehold.co/500x500/f8fafc/94a3b8?text=Gorsel+Yok')}
               />
               {inStock ? (
@@ -104,9 +108,9 @@ export default function ProductDetailClient({ product }: { product: any }) {
                   <button
                     key={img.id}
                     onClick={() => setSelectedImg(img.url)}
-                    className={`w-16 h-16 rounded-xl border-2 p-1 bg-white shrink-0 transition-all ${selectedImg === img.url ? 'border-blue-600 shadow-md' : 'border-slate-200 opacity-70 hover:opacity-100'}`}
+                    className={`w-16 h-16 rounded-xl border-2 p-1 bg-white shrink-0 transition-all relative overflow-hidden ${selectedImg === img.url ? 'border-blue-600 shadow-md' : 'border-slate-200 opacity-70 hover:opacity-100'}`}
                   >
-                    <img src={img.url} alt="" className="w-full h-full object-contain" />
+                    <Image src={img.url} alt="" fill sizes="64px" className="object-contain" />
                   </button>
                 ))}
               </div>

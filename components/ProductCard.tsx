@@ -4,6 +4,7 @@ import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { MessageCircle, ShoppingCart, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 export default function ProductCard({ product }: { product: any }) {
@@ -57,12 +58,13 @@ export default function ProductCard({ product }: { product: any }) {
       <Link href={`/urunler/${product.slug}`} className="flex flex-col flex-grow">
         {/* ÜRÜN GÖRSELİ */}
         <div className="aspect-square relative overflow-hidden bg-slate-50/50 flex items-center justify-center p-6 border-b border-slate-100">
-          <img
+          <Image
             src={imgSrc}
-            alt={product.name || product.title}
-            loading="lazy"
-            decoding="async"
-            className="object-contain w-full h-full group-hover:scale-110 transition-transform duration-500 ease-out"
+            alt={product.name || product.title || 'Yedek Parça'}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            quality={80}
+            className="object-contain p-4 group-hover:scale-110 transition-transform duration-500 ease-out"
             onError={() => {
               setImgSrc('https://placehold.co/400x400/f8fafc/94a3b8?text=Gorsel+Yok');
             }}

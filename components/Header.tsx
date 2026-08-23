@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -20,13 +21,15 @@ import {
   Sparkles
 } from 'lucide-react';
 
+let globalCategoriesCache: any[] | null = null;
+
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showCatMenu, setShowCatMenu] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>(() => globalCategoriesCache || []);
 
   const { getCartCount, getTotals, currency, setCurrency } = useCart();
   const { user, isB2B, isAdmin, logout } = useAuth();
@@ -34,30 +37,48 @@ export default function Header() {
   const cartCount = getCartCount();
   const totals = getTotals();
 
-  // Kategorileri çek
+  // Kategorileri sadece 1 kez çek ve bellekte tut
   useEffect(() => {
+    if (globalCategoriesCache && globalCategoriesCache.length > 0) {
+      setCategories(globalCategoriesCache);
+      return;
+    }
     fetch('/api/v1/categories')
       .then(res => res.json())
       .then(data => {
-        if (data.categories) setCategories(data.categories);
+        if (data.categories) {
+          globalCategoriesCache = data.categories;
+          setCategories(data.categories);
+        }
       })
       .catch(() => {});
   }, []);
 
-  // Canlı arama
+  // Canlı arama (AbortController ve 200ms debounce ile yarış durumlarını önler)
   useEffect(() => {
     if (searchQuery.trim().length >= 2) {
       setIsSearching(true);
+      const abortCtrl = new AbortController();
       const timer = setTimeout(() => {
-        fetch(`/api/v1/products?search=${encodeURIComponent(searchQuery)}&limit=5&currency=${currency}`)
+        fetch(`/api/v1/products?search=${encodeURIComponent(searchQuery)}&limit=5&currency=${currency}`, {
+          signal: abortCtrl.signal,
+        })
           .then(res => res.json())
           .then(data => {
             setSearchResults(data.items || []);
             setIsSearching(false);
           })
-          .catch(() => setIsSearching(false));
-      }, 250);
-      return () => clearTimeout(timer);
+          .catch((err) => {
+            if (err.name !== 'AbortError') {
+              setIsSearching(false);
+            }
+          });
+      }, 200);
+
+      return () => {
+        clearTimeout(timer);
+        abortCtrl.abort();
+      };
     } else {
       setSearchResults([]);
       setIsSearching(false);
@@ -212,7 +233,9 @@ export default function Header() {
                     className="p-3 flex items-center justify-between hover:bg-blue-50/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <img src={p.imageUrl} alt={p.name} className="w-10 h-10 object-contain bg-slate-50 rounded-lg p-1" />
+                      <div className="w-10 h-10 relative shrink-0 bg-slate-50 rounded-lg overflow-hidden p-1 border border-slate-100">
+                        <Image src={p.imageUrl || 'https://placehold.co/400x400'} alt={p.name} fill sizes="40px" className="object-contain p-0.5" />
+                      </div>
                       <div>
                         <div className="text-xs font-bold text-slate-800 line-clamp-1">{p.name}</div>
                         <div className="text-[11px] text-slate-400 font-mono">OEM: {p.sku} | {p.brandName}</div>

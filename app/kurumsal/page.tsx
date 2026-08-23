@@ -1,6 +1,7 @@
 'use client';
 import { Store, ShieldCheck, Truck, X } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function KurumsalPage() {
   const photos = Array.from({ length: 20 }, (_, i) => `/magaza/${i + 1}.jpeg`);
@@ -24,18 +25,9 @@ export default function KurumsalPage() {
           <h1 className="animate-fade-in-up-delay-1 text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight drop-shadow-md">
             Ersa Ticaret'e <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-rose-400">Hoş Geldiniz</span>
           </h1>
-          <p className="animate-fade-in-up-delay-2 text-slate-300 text-lg md:text-xl leading-relaxed mb-8 max-w-2xl mx-auto">
-            Yılların getirdiği tecrübe ve geniş stok ağımızla, beyaz eşya ve kombi yedek parça sektöründe bölgenin en güvenilir tedarikçisi olmaktan gurur duyuyoruz.
+          <p className="animate-fade-in-up-delay-2 text-slate-300 text-lg md:text-xl leading-relaxed font-medium drop-shadow-sm">
+            Darıca ve Kocaeli bölgesinde, kombi ve beyaz eşya yedek parça tedariğinde kaliteli ürün, dürüst ticaret ve güvenilir esnaflık anlayışıyla hizmetinizdeyiz.
           </p>
-          
-          <div className="animate-fade-in-up-delay-2 flex flex-wrap justify-center gap-4">
-            <div className="flex items-center gap-2 text-slate-200 font-medium bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl backdrop-blur-sm">
-              <ShieldCheck className="text-rose-400" size={20} /> %100 Orijinal Parça
-            </div>
-            <div className="flex items-center gap-2 text-slate-200 font-medium bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl backdrop-blur-sm">
-              <Truck className="text-blue-400" size={20} /> Hızlı Tedarik Ağı
-            </div>
-          </div>
         </div>
       </div>
 
@@ -47,17 +39,16 @@ export default function KurumsalPage() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/80 rounded-full blur-3xl -mr-20 -mt-20 z-0 transition-transform group-hover:scale-110 duration-700 pointer-events-none" />
 
           <div className="relative z-10 shrink-0">
-            <div className="w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white shadow-xl shadow-slate-300 relative">
-              <img
+            <div className="w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white shadow-xl shadow-slate-300 relative bg-slate-100">
+              <Image
                 src="/sadik-bey.jpg" 
                 alt="Sadık Akgümüş"
-                className="w-full h-full object-cover bg-slate-100"
-                onError={(e) => {
-                  e.currentTarget.src = "https://ui-avatars.com/api/?name=Sadik+Akgumus&background=0D8ABC&color=fff&size=256&font-size=0.33";
-                }}
+                fill
+                sizes="(max-width: 768px) 160px, 192px"
+                className="object-cover"
               />
             </div>
-            <div className="absolute bottom-2 md:bottom-4 right-0 md:right-2 bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md border-2 border-white">
+            <div className="absolute bottom-2 md:bottom-4 right-0 md:right-2 bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md border-2 border-white z-10">
               Kurucu
             </div>
           </div>
@@ -154,14 +145,13 @@ export default function KurumsalPage() {
                 onClick={() => setSelectedPhoto(photo)}
               >
                 <div className="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-500/20 transition-colors z-10" />
-                <img 
+                <Image 
                   src={photo} 
                   alt={`Ersa Ticaret Mağaza Görseli ${index + 1}`}
-                  loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out opacity-80 group-hover:opacity-100"
-                  onError={(e) => {
-                    e.currentTarget.parentElement!.style.display = 'none';
-                  }}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  quality={75}
+                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out opacity-80 group-hover:opacity-100"
                 />
               </div>
             ))}
@@ -176,17 +166,22 @@ export default function KurumsalPage() {
           onClick={() => setSelectedPhoto(null)}
         >
           <button 
-            className="absolute top-6 right-6 p-2 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all"
+            className="absolute top-6 right-6 p-2 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all z-20"
             onClick={() => setSelectedPhoto(null)}
           >
             <X size={32} />
           </button>
-          <img 
-            src={selectedPhoto} 
-            alt="Büyütülmüş Görsel" 
-            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl ring-1 ring-white/10 transform scale-100 animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()} 
-          />
+          <div className="relative w-full max-w-4xl h-[75vh] max-h-[800px]">
+            <Image 
+              src={selectedPhoto} 
+              alt="Büyütülmüş Görsel" 
+              fill
+              sizes="90vw"
+              quality={90}
+              className="object-contain rounded-xl shadow-2xl ring-1 ring-white/10 transform scale-100 animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()} 
+            />
+          </div>
         </div>
       )}
 

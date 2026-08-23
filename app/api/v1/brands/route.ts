@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { productService } from '@/server/catalog/product-service';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // 1 saat ISR önbellek
 
 export async function GET() {
   try {

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import ProductCard from '@/components/ProductCard';
 import { productService } from '@/server/catalog/product-service';
 import { getSessionUser } from '@/server/auth/jwt';
@@ -95,14 +96,17 @@ export default async function Home() {
 
       {/* --- VİTRİN HERO ALANI --- */}
       <section className="relative overflow-hidden pt-24 pb-36 md:pt-32 md:pb-44 flex items-center justify-center min-h-[580px]">
-        <div 
-          className="absolute inset-0 z-0 scale-105 transform origin-bottom transition-transform duration-[20s] ease-out hover:scale-110"
-          style={{
-            backgroundImage: 'url("/vitrin.png")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'top',
-          }}
-        />
+        <div className="absolute inset-0 z-0 scale-105 transform origin-bottom transition-transform duration-[20s] ease-out hover:scale-110">
+          <Image
+            src="/vitrin.png"
+            alt="Ersa Ticaret Mağaza Görünümü"
+            fill
+            priority
+            quality={80}
+            sizes="100vw"
+            className="object-cover object-top"
+          />
+        </div>
         <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-[2px] z-10" />
         
         {/* Renk Küreleri */}
