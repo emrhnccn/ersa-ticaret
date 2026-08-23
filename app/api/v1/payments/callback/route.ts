@@ -11,6 +11,22 @@ export async function POST(req: NextRequest) {
     const result = await pos.verifyCallback(body);
 
     if (result.status === 'PAID') {
+      // Sipariş ödemesi ise önce siparişi doğrula
+      if (body.orderId) {
+        const existingOrder = await prisma.order.findUnique({ where: { id: body.orderId } });
+        if (!existingOrder) {
+          return NextResponse.json({ error: 'Geçersiz sipariş ID' }, { status: 404 });
+        }
+      }
+
+      // Cari ödeme ise şirketi doğrula
+      if (body.purpose === 'CURRENT_ACCOUNT' && body.companyId) {
+        const existingCompany = await prisma.company.findUnique({ where: { id: body.companyId } });
+        if (!existingCompany) {
+          return NextResponse.json({ error: 'Geçersiz şirket ID' }, { status: 404 });
+        }
+      }
+
       const payment = await prisma.payment.create({
         data: {
           provider: pos.providerName,

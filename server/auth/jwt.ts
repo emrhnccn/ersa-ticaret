@@ -5,7 +5,13 @@ import type { NextRequest } from 'next/server';
 const JWT_FALLBACK_SECRET = 'ersa_jwt_secret_key_2026_b2b_ecommerce_secure_99';
 
 function getJwtSecret(): string {
-  return process.env.JWT_SECRET || JWT_FALLBACK_SECRET;
+  if (process.env.JWT_SECRET) {
+    return process.env.JWT_SECRET;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[CRITICAL SECURITY WARNING] JWT_SECRET environment variable is not defined on production server. Please set JWT_SECRET in your production settings.');
+  }
+  return JWT_FALLBACK_SECRET;
 }
 
 const TOKEN_COOKIE_NAME = 'ersa_auth_token';

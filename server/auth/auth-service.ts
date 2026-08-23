@@ -219,18 +219,21 @@ export const authService = {
         }
       }
     } catch (dbError) {
-      console.warn('Database query error in login, checking demo fallback:', dbError);
+      console.error('Database query error in login:', dbError);
     }
 
-    // Demo / Sistem Yönetici hesabı fallback kontrolü (DB bağlantı kesintilerinde kesintisiz erişim)
-    const demo = DEMO_FALLBACK_ACCOUNTS[cleanEmail];
-    if (demo && demo.password === password) {
-      const token = signToken(demo.payload);
-      setAuthCookie(token);
-      return {
-        user: demo.user,
-        token,
-      };
+    // Demo / Geliştirme hesabı fallback kontrolü (Yalnızca development ortamında ve ENABLE_DEMO_AUTH aktifse)
+    const isDemoAllowed = process.env.NODE_ENV !== 'production' && process.env.ENABLE_DEMO_AUTH === 'true';
+    if (isDemoAllowed) {
+      const demo = DEMO_FALLBACK_ACCOUNTS[cleanEmail];
+      if (demo && demo.password === password) {
+        const token = signToken(demo.payload);
+        setAuthCookie(token);
+        return {
+          user: demo.user,
+          token,
+        };
+      }
     }
 
     throw new Error('Geçersiz e-posta veya şifre.');
