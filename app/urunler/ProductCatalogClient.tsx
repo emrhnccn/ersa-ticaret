@@ -7,13 +7,9 @@ import {
   PackageOpen,
   ChevronLeft,
   ChevronRight,
-  Building2,
-  Sparkles,
   RefreshCw
 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
-import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
 
 interface ProductCatalogClientProps {
   initialProducts: any[];
@@ -57,9 +53,6 @@ export default function ProductCatalogClient({
   const [totalCount, setTotalCount] = useState(initialPagination?.total || (initialProducts ? initialProducts.length : 0));
 
   const [isInitialMount, setIsInitialMount] = useState(true);
-  const { currency } = useCart();
-  const { isB2B, user } = useAuth();
-
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
 
   useEffect(() => {
@@ -69,7 +62,7 @@ export default function ProductCatalogClient({
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Filtreler veya sayfa değiştiğinde ürünleri arka planda güncelle (İlk yüklemede Server verisi zaten hazır!)
+  // Filtreler veya sayfa değiştiğinde ürünleri arka planda güncelle
   useEffect(() => {
     if (isInitialMount) {
       setIsInitialMount(false);
@@ -80,7 +73,6 @@ export default function ProductCatalogClient({
     const query = new URLSearchParams({
       page: String(currentPage),
       limit: '24',
-      currency,
       sortBy,
     });
 
@@ -110,7 +102,7 @@ export default function ProductCatalogClient({
       .finally(() => setLoading(false));
 
     return () => abortCtrl.abort();
-  }, [currentPage, selectedCategory, selectedBrand, inStockOnly, sortBy, currency, debouncedSearch]);
+  }, [currentPage, selectedCategory, selectedBrand, inStockOnly, sortBy, debouncedSearch]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -137,22 +129,6 @@ export default function ProductCatalogClient({
               Kombi elektronik anakartları, beyaz eşya motorları, sirkülasyon pompaları ve servis malzemeleri.
             </p>
           </div>
-
-          {/* B2B Giriş Yapmışsa Bilgi Kutusu */}
-          {isB2B && user?.company && (
-            <div className="bg-slate-800/90 border border-emerald-500/30 p-4 rounded-2xl flex items-center gap-4 text-left">
-              <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center">
-                <Building2 size={24} />
-              </div>
-              <div>
-                <div className="text-xs text-slate-400 font-medium">Aktif Bayi Hesabı:</div>
-                <div className="text-sm font-bold text-white">{user.company.legalName}</div>
-                <div className="text-xs font-extrabold text-emerald-400">
-                  {user.company.customerGroup?.name || 'Özel Bayi İndirimi Aktif'}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -275,8 +251,6 @@ export default function ProductCatalogClient({
                   className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-bold text-slate-800 focus:outline-none focus:border-blue-500"
                 >
                   <option value="newest">En Yeniler</option>
-                  <option value="price_asc">Fiyat: Düşükten Yükseğe</option>
-                  <option value="price_desc">Fiyat: Yüksekten Düşüğe</option>
                   <option value="name_asc">Ürün Adı (A-Z)</option>
                 </select>
               </div>

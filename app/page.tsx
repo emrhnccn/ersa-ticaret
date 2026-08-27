@@ -2,13 +2,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import ProductCard from '@/components/ProductCard';
 import { productService } from '@/server/catalog/product-service';
-import { getSessionUser } from '@/server/auth/jwt';
 import {
   ChevronRight,
   Package,
   Phone,
   MessageCircle,
-  Building2,
   Sparkles
 } from 'lucide-react';
 
@@ -17,8 +15,8 @@ import type { Metadata } from 'next';
 export const revalidate = 60; // 60 saniye boyunca Edge CDN üzerinden 20ms'de anında sunulur
 
 export const metadata: Metadata = {
-  title: 'Ersa Ticaret | B2B & B2C Beyaz Eşya ve Kombi Yedek Parça Merkezi',
-  description: 'Darıca ve Kocaeli bölgesinin lider toptan ve perakende kombi elektronik kartı, beyaz eşya yedek parçası ve teknik servis ekipmanı tedarikçisi. Özel bayi fiyatları ve anında stok teslimatı.',
+  title: 'Ersa Ticaret | Online Yedek Parça Merkezi',
+  description: 'Darıca ve Kocaeli bölgesinin lider kombi elektronik kartı, beyaz eşya yedek parçası ve teknik servis ekipmanı tedarikçisi. Geniş stok kataloğu, aynı gün teslimat ve anında fiyat danışma.',
   alternates: {
     canonical: 'https://www.ersaticaret.com',
   },
@@ -28,16 +26,9 @@ export default async function Home() {
   let popularProducts: any[] = [];
 
   try {
-    const session = getSessionUser();
-    const customerContext = session ? {
-      userId: session.userId,
-      companyId: session.companyId || undefined,
-      customerGroupId: session.customerGroupId || undefined,
-    } : null;
-
     const res = await productService.getProducts(
       { limit: 8, sortBy: 'newest' },
-      customerContext
+      null
     );
     if (res && res.items) popularProducts = res.items;
   } catch (error) {
@@ -46,7 +37,7 @@ export default async function Home() {
 
   const testimonials = [
     {
-      text: "Darıca'da aradığım tüm kombi kartlarını anında bulabildiğim tek yer. Fiyatları toptancı olduğu için çok uygun.",
+      text: "Darıca'da aradığım tüm kombi kartlarını anında bulabildiğim tek yer. Esnaflıkları ve parça bilgileri çok iyi.",
       author: "Ahmet Usta (Kombi Servisi)",
       source: "Google Yorumu"
     },
@@ -56,7 +47,7 @@ export default async function Home() {
       source: "Google Yorumu"
     },
     {
-      text: "Sabah sipariş geçiyorum, anında malzemeleri hazırlıyorlar. Kocaeli çevresinde böyle parça stoğu olan yer az.",
+      text: "WhatsApp'tan parça fotoğrafı atıyorum, anında uyumlu modeli bulup hazırlıyorlar. Hızlı ve ilgili bir mağaza.",
       author: "Hakan T. (Teknik Servis)",
       source: "Google Yorumu"
     },
@@ -118,7 +109,7 @@ export default async function Home() {
         <div className="relative z-20 max-w-5xl mx-auto px-4 flex flex-col items-center text-center">
           <div className="inline-flex items-center justify-center px-5 py-2 mb-6 text-xs md:text-sm font-bold text-amber-300 bg-slate-900/90 border border-slate-700 rounded-full font-mono shadow-2xl">
             <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />
-            DARICA &amp; GEBZE BÖLGESİ YEDEK PARÇA VE KART MERKEZİ
+            DARICA &amp; GEBZE BÖLGESİ ONLINE YEDEK PARÇA VE KART MERKEZİ
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 tracking-tight leading-[1.15] drop-shadow-2xl">
@@ -129,7 +120,7 @@ export default async function Home() {
           </h1>
           
           <p className="text-slate-300 text-base md:text-xl max-w-3xl mx-auto mb-10 leading-relaxed font-medium">
-            Vaillant, Bosch, Demirdöküm ve tüm markalara uyumlu orijinal &amp; revizyonlu anakartlar, motorlar, pompalar. Ustalara özel anlık toptan iskonto.
+            Vaillant, Bosch, Demirdöküm ve tüm markalara uyumlu orijinal &amp; revizyonlu anakartlar, motorlar, pompalar. Aradığınız parçanın güncel fiyatı için bize hemen ulaşın.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
@@ -141,13 +132,15 @@ export default async function Home() {
               Yedek Parça Kataloğu
             </Link>
 
-            <Link
-              href="/b2b-basvuru"
-              className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 border border-white/20 transition-all backdrop-blur-xl active:scale-95 text-base"
+            <a
+              href="https://wa.me/905525843073?text=Merhaba,%20parça%20fiyatı%20ve%20stok%20bilgisi%20almak%20istiyorum."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-8 py-4 bg-[#25D366] hover:bg-[#1ea952] text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-emerald-500/25 active:scale-95 text-base"
             >
-              <Building2 size={20} className="text-amber-400" />
-              B2B Bayi Girişi &amp; Başvuru
-            </Link>
+              <MessageCircle size={20} className="fill-white/20" />
+              WhatsApp Fiyat Danışma
+            </a>
           </div>
         </div>
       </section>
@@ -162,7 +155,7 @@ export default async function Home() {
                   <Sparkles size={14} /> Stoktaki Parçalar
                 </div>
                 <h2 className="text-2xl md:text-3xl font-black text-slate-900">Öne Çıkan Yedek Parçalar</h2>
-                <p className="text-slate-500 text-xs mt-1">Fiyatlar <strong>KDV Hariçtir</strong>. Bayi girişi yaparak özel iskontolu fiyatlarınızı görebilirsiniz.</p>
+                <p className="text-slate-500 text-xs mt-1">Stoktaki tüm parçalarımızın güncel fiyat ve temin bilgisi için <strong>Fiyat Sorun</strong> butonuna tıklayarak doğrudan WhatsApp'tan yazabilirsiniz.</p>
               </div>
               <Link
                 href="/urunler"
@@ -237,16 +230,16 @@ export default async function Home() {
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-2xl md:text-4xl font-black mb-4">Aradığınız Parçayı Hemen Bulalım</h2>
           <p className="text-blue-100 text-xs md:text-sm mb-8 max-w-xl mx-auto">
-            Kataloğumuzda göremediğiniz özel parça kodları veya toptan sipariş teklifleri için doğrudan bizimle iletişime geçebilirsiniz.
+            Kataloğumuzda göremediğiniz özel parça kodları veya toplu alım fiyat teklifleri için doğrudan bizimle iletişime geçebilirsiniz.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="https://wa.me/905525843073?text=Merhaba,%20parça%20sorgulamak%20istiyorum."
+              href="https://wa.me/905525843073?text=Merhaba,%20parça%20fiyatı%20sormak%20istiyorum."
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-8 py-4 bg-white text-blue-800 font-black rounded-2xl flex items-center justify-center gap-2 shadow-xl active:scale-95 text-xs"
             >
-              <MessageCircle size={18} className="text-emerald-600" /> WhatsApp Destek Hattı
+              <MessageCircle size={18} className="text-emerald-600" /> WhatsApp Destek &amp; Fiyat Hattı
             </a>
             <a
               href="tel:+905525843073"

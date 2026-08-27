@@ -122,7 +122,7 @@ export default function KurumsalPage() {
                 3. Doğrudan Toptancı Fiyatı &amp; Şeffaf İskonto
               </h4>
               <p className="text-slate-600 text-xs md:text-sm leading-relaxed">
-                Aracı ve komisyoncu olmadan doğrudan birinci el toptan fiyatlarla çalışırız. B2B anlaşmalı bayilerimize net iskonto ve vadeli cari hesap kolaylığı sağlarız.
+                Aracı ve komisyoncu olmadan doğrudan birinci elden toptan ve perakende satış yaparız. Teknik servislerimize ve müşterilerimize en uygun fiyat avantajı ve anında stok desteği sağlarız.
               </p>
             </div>
 

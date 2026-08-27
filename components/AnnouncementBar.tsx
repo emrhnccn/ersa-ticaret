@@ -31,7 +31,7 @@ export default function AnnouncementBar() {
             className="flex items-center gap-1.5 hover:text-white transition-colors"
           >
             <Phone size={13} className="text-blue-400" />
-            <span className="hidden sm:inline">Sipariş Hattı:</span>
+            <span className="hidden sm:inline">Fiyat &amp; Parça Hattı:</span>
             <span className="text-white font-bold">0552 584 30 73</span>
           </a>
           <span className="hidden lg:flex items-center gap-2">

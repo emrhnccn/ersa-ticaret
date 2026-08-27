@@ -6,11 +6,7 @@ import Link from 'next/link';
 import {
   Lock,
   Mail,
-  Building2,
   ArrowRight,
-  Shield,
-  UserCheck,
-  Sparkles,
   AlertCircle
 } from 'lucide-react';
 
@@ -23,18 +19,17 @@ export default function GirisPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (e?: React.FormEvent, customEmail?: string, customPass?: string) => {
+  const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const targetEmail = (customEmail || email).trim();
-    const targetPass = customPass || password;
+    const targetEmail = email.trim();
+    const targetPass = password;
 
     try {
       const res = (await login(targetEmail, targetPass)) as any;
       
-      // Admin ise doğrudan /admin paneline, müşteri/bayi ise /hesap paneline yönlendir
       if (res?.user?.role === 'ADMIN' || res?.role === 'ADMIN' || targetEmail.toLowerCase().includes('admin')) {
         router.push('/admin');
       } else {
@@ -44,12 +39,6 @@ export default function GirisPage() {
       setError(err.message || 'Giriş yapılamadı');
       setLoading(false);
     }
-  };
-
-  const fillAndLogin = (eMail: string, pass: string) => {
-    setEmail(eMail);
-    setPassword(pass);
-    handleLogin(undefined, eMail, pass);
   };
 
   return (
@@ -67,7 +56,7 @@ export default function GirisPage() {
                 ERSA <span className="text-blue-400">TİCARET</span>
               </div>
               <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                B2B &amp; B2C Giriş Portalı
+                Online Yedek Parça
               </div>
             </div>
           </Link>
@@ -78,7 +67,7 @@ export default function GirisPage() {
           
           <h2 className="text-xl font-black text-slate-900 mb-1">Hesabınıza Giriş Yapın</h2>
           <p className="text-xs text-slate-500 mb-6">
-            Özel bayi iskonto oranları, cari hesap ve yönetim için giriş yapınız.
+            Yönetici ve kayıtlı hesaplar için güvenli giriş alanı.
           </p>
 
           {error && (
@@ -96,7 +85,7 @@ export default function GirisPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ornek@firma.com"
+                  placeholder="eposta@adresiniz.com"
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:border-blue-500 text-xs font-medium"
                 />
                 <Mail className="absolute left-3.5 top-3.5 text-slate-400" size={16} />
@@ -128,57 +117,12 @@ export default function GirisPage() {
             </button>
           </form>
 
-          {/* HIZLI TEST DEMO HESAPLARI (Sadece Test/Geliştirme Ortamında) */}
-          {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true' && (
-            <div className="mt-8 pt-6 border-t border-slate-100">
-              <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1">
-                <Sparkles size={12} className="text-amber-500" /> Hızlı Test Demo Hesapları
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => fillAndLogin('admin@ersaticaret.com', 'Admin123!')}
-                  className="p-2.5 bg-slate-900 text-white hover:bg-slate-800 rounded-xl flex items-center gap-2 transition-colors text-left"
-                >
-                  <Shield size={14} className="text-amber-400 shrink-0" />
-                  <div className="line-clamp-1">👑 Admin Paneli</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => fillAndLogin('bayi1@cinarisi.com', 'Ersa123!')}
-                  className="p-2.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 rounded-xl flex items-center gap-2 transition-colors text-left"
-                >
-                  <Building2 size={14} className="text-emerald-600 shrink-0" />
-                  <div className="line-clamp-1">A Grubu Bayi (%15)</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => fillAndLogin('bayi2@marmarateknik.com', 'Ersa123!')}
-                  className="p-2.5 bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200 rounded-xl flex items-center gap-2 transition-colors text-left"
-                >
-                  <Building2 size={14} className="text-blue-600 shrink-0" />
-                  <div className="line-clamp-1">B Grubu Bayi (%10)</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => fillAndLogin('musteri@gmail.com', 'Ersa123!')}
-                  className="p-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl flex items-center gap-2 transition-colors text-left"
-                >
-                  <UserCheck size={14} className="text-slate-600 shrink-0" />
-                  <div className="line-clamp-1">B2C Müşteri</div>
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 text-center text-xs text-slate-500">
-            Bayilik hesabınız yok mu?{' '}
-            <Link href="/b2b-basvuru" className="text-blue-600 font-bold hover:underline">
-              B2B Bayi Başvurusu Yapın
+          <div className="mt-6 text-center text-xs text-slate-500 flex items-center justify-between">
+            <Link href="/" className="text-slate-500 hover:text-blue-600 font-bold">
+              ← Ana Sayfa
+            </Link>
+            <Link href="/urunler" className="text-blue-600 font-bold hover:underline">
+              Parça Kataloğu →
             </Link>
           </div>
 

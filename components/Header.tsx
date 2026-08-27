@@ -2,23 +2,20 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import {
-  ShoppingCart,
   Menu,
   X,
   Phone,
   MessageCircle,
   User,
-  Building2,
   ChevronDown,
   Search,
-  CreditCard,
   LogOut,
   Shield,
   Layers,
-  Sparkles
+  Clock,
+  MapPin
 } from 'lucide-react';
 
 let globalCategoriesCache: any[] | null = null;
@@ -31,11 +28,7 @@ export default function Header() {
   const [showCatMenu, setShowCatMenu] = useState(false);
   const [categories, setCategories] = useState<any[]>(() => globalCategoriesCache || []);
 
-  const { getCartCount, getTotals, currency, setCurrency } = useCart();
-  const { user, isB2B, isAdmin, logout } = useAuth();
-
-  const cartCount = getCartCount();
-  const totals = getTotals();
+  const { user, isAdmin, logout } = useAuth();
 
   // Kategorileri sadece 1 kez çek ve bellekte tut
   useEffect(() => {
@@ -54,13 +47,13 @@ export default function Header() {
       .catch(() => {});
   }, []);
 
-  // Canlı arama (AbortController ve 200ms debounce ile yarış durumlarını önler)
+  // Canlı arama (AbortController ve 200ms debounce)
   useEffect(() => {
     if (searchQuery.trim().length >= 2) {
       setIsSearching(true);
       const abortCtrl = new AbortController();
       const timer = setTimeout(() => {
-        fetch(`/api/v1/products?search=${encodeURIComponent(searchQuery)}&limit=5&currency=${currency}`, {
+        fetch(`/api/v1/products?search=${encodeURIComponent(searchQuery)}&limit=5`, {
           signal: abortCtrl.signal,
         })
           .then(res => res.json())
@@ -83,12 +76,12 @@ export default function Header() {
       setSearchResults([]);
       setIsSearching(false);
     }
-  }, [searchQuery, currency]);
+  }, [searchQuery]);
 
   return (
     <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-800 shadow-xl w-full">
-      {/* 1. ÜST BİLGİ VE DÖVİZ / B2B BARI (Çiğdem Soğutma Tarzı) */}
-      <div className="bg-slate-950/80 border-b border-slate-800/80 px-4 py-1.5 text-xs text-slate-300">
+      {/* 1. ÜST BİLGİ VE İLETİŞİM BARI */}
+      <div className="bg-slate-950/90 border-b border-slate-800/80 px-4 py-1.5 text-xs text-slate-300">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Sol: İletişim Bilgileri */}
@@ -98,45 +91,20 @@ export default function Header() {
                 <Phone size={12} className="text-blue-400" /> 0552 584 30 73
               </a>
               <span className="hidden md:inline text-slate-600">|</span>
-              <a href="https://wa.me/905525843073" target="_blank" className="hidden md:flex items-center gap-1 hover:text-emerald-400">
-                <MessageCircle size={12} className="text-emerald-400" /> WhatsApp Destek
+              <a href="https://wa.me/905525843073" target="_blank" rel="noopener noreferrer" className="hidden md:flex items-center gap-1 hover:text-emerald-400">
+                <MessageCircle size={12} className="text-emerald-400" /> WhatsApp Fiyat &amp; Parça Hattı
               </a>
             </div>
           </div>
 
-          {/* Sağ: Döviz Seçici + Kullanıcı Durumu */}
-          <div className="flex items-center gap-3">
-            {/* Döviz Seçici */}
-            <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700">
-              <button
-                onClick={() => setCurrency('TRY')}
-                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${currency === 'TRY' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-              >
-                ₺ TL
-              </button>
-              <button
-                onClick={() => setCurrency('EUR')}
-                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${currency === 'EUR' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-              >
-                € EUR
-              </button>
-              <button
-                onClick={() => setCurrency('USD')}
-                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-colors ${currency === 'USD' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-              >
-                $ USD
-              </button>
+          {/* Sağ: Çalışma Saatleri & Kullanıcı Durumu */}
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400">
+              <Clock size={12} className="text-amber-400" />
+              <span>Pzt-Cmt: 08:30 - 19:00</span>
             </div>
 
-            {/* B2B Cari Göstergesi */}
-            {isB2B && user?.company && (
-              <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg font-bold">
-                <Building2 size={13} />
-                <span>{user.company.customerGroup?.name || 'Bayi Hesabı'}</span>
-              </div>
-            )}
-
-            {/* Giriş Yapmış Kullanıcı / Bayi Girişi Linki */}
+            {/* Giriş Yapmış Kullanıcı */}
             {user ? (
               <div className="flex items-center gap-2">
                 {isAdmin ? (
@@ -144,7 +112,8 @@ export default function Header() {
                     href="/admin"
                     className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-black text-xs shadow-md shadow-blue-600/30 transition-all"
                   >
-                    <span>👑 Admin Paneli</span>
+                    <Shield size={13} className="text-amber-300" />
+                    <span>Admin Paneli</span>
                   </Link>
                 ) : (
                   <Link
@@ -164,22 +133,16 @@ export default function Header() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/giris" className="hover:text-blue-400 font-bold">
-                  Giriş Yap
-                </Link>
-                <span className="text-slate-700">/</span>
-                <Link href="/b2b-basvuru" className="text-blue-400 hover:text-blue-300 font-bold">
-                  B2B Bayi Başvurusu
-                </Link>
-              </div>
+              <Link href="/giris" className="text-slate-400 hover:text-blue-400 font-bold text-[11px]">
+                Giriş Yap
+              </Link>
             )}
 
           </div>
         </div>
       </div>
 
-      {/* 2. ORTA BÖLÜM: LOGO + ARAMA KUTUSU + SEPET */}
+      {/* 2. ORTA BÖLÜM: LOGO + ARAMA KUTUSU + WHATSAPP FİYAT HATTI */}
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-3 shrink-0">
@@ -191,12 +154,12 @@ export default function Header() {
               ERSA <span className="text-blue-400">TİCARET</span>
             </div>
             <div className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
-              B2B &amp; B2C Yedek Parça
+              Online Yedek Parça
             </div>
           </div>
         </Link>
 
-        {/* CANLI ARAMA ÇUBUĞU (Çiğdem Soğutma Tarzı) */}
+        {/* CANLI ARAMA ÇUBUĞU */}
         <div className="hidden md:flex flex-1 max-w-2xl relative">
           <div className="relative w-full">
             <input
@@ -242,8 +205,10 @@ export default function Header() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-extrabold text-blue-600">{p.priceQuote?.vatExcludedLabel}</div>
-                      <div className="text-[10px] text-slate-400">Stokta: {p.stockQty} {p.unit}</div>
+                      <span className="inline-block text-xs font-black text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                        Fiyat Sorun
+                      </span>
+                      <div className="text-[10px] text-slate-400 mt-0.5">Stokta: {p.stockQty || 'Var'} {p.unit || 'Adet'}</div>
                     </div>
                   </Link>
                 ))}
@@ -252,47 +217,31 @@ export default function Header() {
           )}
         </div>
 
-        {/* SAĞ AKSİYONLAR: SEPET & HESAP */}
+        {/* SAĞ AKSİYONLAR: WHATSAPP FİYAT HATTI */}
         <div className="flex items-center gap-3">
-          {/* Müşteri / Bayi Portalı Butonu */}
-          <Link
-            href={user ? (isAdmin ? "/admin" : "/hesap") : "/giris"}
-            className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-700 text-xs font-bold transition-colors"
+          <a
+            href="https://wa.me/905525843073?text=Merhaba,%20parça%20fiyatı%20ve%20stok%20sorgulamak%20istiyorum."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#25D366] hover:bg-[#1ea952] text-white rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 text-xs font-bold"
           >
-            {isAdmin ? <Shield size={16} className="text-amber-400" /> : <User size={16} className="text-blue-400" />}
-            <span>{user ? (isAdmin ? 'Admin Paneli' : 'Hesabım') : 'Giriş Yap'}</span>
-          </Link>
-
-          {/* Sepet Butonu */}
-          <Link
-            href="/sepet"
-            className="flex items-center gap-3 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 group"
-          >
-            <div className="relative">
-              <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-              {cartCount > 0 && (
-                <span className="absolute -top-2.5 -right-2.5 bg-rose-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-900 shadow-md">
-                  {cartCount}
-                </span>
-              )}
-            </div>
-            <div className="hidden lg:block text-left">
-              <div className="text-[10px] font-bold text-blue-200 uppercase tracking-wider leading-none">Sepetim</div>
-              <div className="text-xs font-black leading-none mt-1">{totals.grandTotal.toLocaleString('tr-TR')} ₺</div>
-            </div>
-          </Link>
+            <MessageCircle size={17} className="fill-white/20" />
+            <span className="hidden sm:inline">WhatsApp Fiyat Hattı</span>
+            <span className="sm:hidden">Fiyat Sor</span>
+          </a>
 
           {/* Mobil Menü Butonu */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="p-2 text-slate-300 hover:text-white rounded-xl md:hidden"
+            aria-label="Menüyü Aç/Kapat"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* 3. ALT BÖLÜM: MEGA KATEGORİ MENÜSÜ (Çiğdem Soğutma Tarzı) */}
+      {/* 3. ALT BÖLÜM: KATEGORİ & HIZLI MENÜ */}
       <div className="bg-slate-800 border-t border-slate-700/80 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           
@@ -348,17 +297,17 @@ export default function Header() {
             <Link href="/urunler" className="hover:text-blue-400 py-3 transition-colors">Yedek Parça Kataloğu</Link>
             <Link href="/rehber" className="hover:text-blue-400 py-3 transition-colors">Teknik Rehber</Link>
             <Link href="/kurumsal" className="hover:text-blue-400 py-3 transition-colors">Hakkımızda</Link>
-            <Link href="/iletisim" className="hover:text-blue-400 py-3 transition-colors">İletişim</Link>
+            <Link href="/iletisim" className="hover:text-blue-400 py-3 transition-colors">İletişim &amp; Mağazamız</Link>
           </div>
 
-          {/* Hızlı B2B Bayi Girişi Linki */}
-          <div className="flex items-center gap-4 text-xs font-bold">
-            <Link
-              href="/b2b-basvuru"
-              className="text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors"
+          {/* Hızlı Telefon Bilgisi */}
+          <div className="flex items-center gap-3 text-xs font-bold text-slate-300">
+            <a
+              href="tel:+905525843073"
+              className="text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition-colors"
             >
-              <Building2 size={14} /> Bayi Ol / Özel Fiyat Al
-            </Link>
+              <Phone size={13} /> 0552 584 30 73
+            </a>
           </div>
 
         </div>
@@ -372,35 +321,34 @@ export default function Header() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Parça ara..."
+              placeholder="Parça veya kod ara..."
               className="w-full pl-10 pr-4 py-2.5 bg-slate-800 text-white rounded-xl text-sm border border-slate-700"
             />
             <Search className="absolute left-3 top-3 text-slate-400" size={16} />
           </div>
 
-          <div className="flex items-center justify-between p-2 bg-slate-800 rounded-xl text-xs">
-            <span className="text-slate-400">Para Birimi:</span>
-            <div className="flex gap-1 font-bold">
-              <button onClick={() => setCurrency('TRY')} className={`px-2 py-1 rounded ${currency === 'TRY' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>TL</button>
-              <button onClick={() => setCurrency('EUR')} className={`px-2 py-1 rounded ${currency === 'EUR' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>EUR</button>
-              <button onClick={() => setCurrency('USD')} className={`px-2 py-1 rounded ${currency === 'USD' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>USD</button>
-            </div>
-          </div>
-
           <div className="space-y-1 font-semibold text-slate-200 text-sm">
             <Link href="/" onClick={() => setIsOpen(false)} className="block p-2.5 hover:bg-slate-800 rounded-xl">Ana Sayfa</Link>
-            <Link href="/urunler" onClick={() => setIsOpen(false)} className="block p-2.5 hover:bg-slate-800 rounded-xl">Ürün Kataloğu</Link>
-            <Link href="/b2b-basvuru" onClick={() => setIsOpen(false)} className="block p-2.5 bg-blue-600/20 text-blue-400 rounded-xl font-bold">B2B Bayi Başvurusu</Link>
-            <Link href="/hesap" onClick={() => setIsOpen(false)} className="block p-2.5 hover:bg-slate-800 rounded-xl">Hesabım / Cari Hesap</Link>
+            <Link href="/urunler" onClick={() => setIsOpen(false)} className="block p-2.5 hover:bg-slate-800 rounded-xl">Yedek Parça Kataloğu</Link>
+            <Link href="/rehber" onClick={() => setIsOpen(false)} className="block p-2.5 hover:bg-slate-800 rounded-xl">Teknik Rehber</Link>
+            <Link href="/kurumsal" onClick={() => setIsOpen(false)} className="block p-2.5 hover:bg-slate-800 rounded-xl">Hakkımızda</Link>
             <Link href="/iletisim" onClick={() => setIsOpen(false)} className="block p-2.5 hover:bg-slate-800 rounded-xl">İletişim</Link>
           </div>
 
-          <div className="pt-2 border-t border-slate-800">
+          <div className="pt-3 border-t border-slate-800 space-y-2">
+            <a
+              href="https://wa.me/905525843073?text=Merhaba,%20parça%20fiyatı%20ve%20stok%20sorgulamak%20istiyorum."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 bg-[#25D366] hover:bg-[#1ea952] text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm"
+            >
+              <MessageCircle size={18} /> WhatsApp ile Fiyat Sor
+            </a>
             <a
               href="tel:+905525843073"
-              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2"
+              className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm border border-slate-700"
             >
-              <Phone size={16} /> 0552 584 30 73
+              <Phone size={16} className="text-blue-400" /> 0552 584 30 73
             </a>
           </div>
         </div>

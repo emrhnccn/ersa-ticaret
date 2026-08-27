@@ -25,14 +25,15 @@ export const metadata: Metadata = {
     canonical: 'https://www.ersaticaret.com',
   },
   title: {
-    default: "Ersa Ticaret | B2B & B2C Beyaz Eşya ve Kombi Yedek Parça Merkezi",
+    default: "Ersa Ticaret | Online Yedek Parça",
     template: "%s | Ersa Ticaret" 
   },
-  description: "Darıca ve Kocaeli bölgesinin lider toptan ve perakende kombi elektronik kartı, beyaz eşya yedek parçası ve teknik servis ekipmanı tedarikçisi. Özel bayi fiyatları ve anında stok teslimatı.",
+  description: "Darıca ve Kocaeli bölgesinin lider kombi elektronik kartı, beyaz eşya yedek parçası ve teknik servis ekipmanı tedarikçisi. Orijinal ve muadil yedek parça stoğu, aynı gün hızlı teslimat ve fiyat danışma.",
   keywords: [
+    "online yedek parça",
+    "ersa ticaret online yedek parça",
     "kombi yedek parça", 
     "beyaz eşya yedek parça", 
-    "b2b yedek parça",
     "kombi anakart", 
     "darıca yedek parça", 
     "kocaeli kombi parça", 
@@ -50,8 +51,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "tr_TR",
     url: "https://www.ersaticaret.com",
-    title: "Ersa Ticaret | B2B & B2C Yedek Parça Merkezi",
-    description: "Kombi ve beyaz eşya yedek parçalarında toptan ve perakende satış. Binlerce parça anında stoktan teslim.",
+    title: "Ersa Ticaret | Online Yedek Parça",
+    description: "Kombi ve beyaz eşya yedek parçalarında geniş ürün kataloğu ve anında stok danışma. Binlerce parça stoktan hızlı temin.",
     siteName: "Ersa Ticaret",
     images: [
       {

@@ -303,7 +303,7 @@ export default function MusteriHesapPage() {
   if (authLoading || (!user && !authLoading)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-mono">
-        B2B Bayi Oturumu Doğrulanıyor...
+        Kullanıcı Oturumu Doğrulanıyor...
       </div>
     );
   }
@@ -321,34 +321,29 @@ export default function MusteriHesapPage() {
               </div>
               <div>
                 <div className="font-black text-sm text-white">Sistem Yöneticisi (Admin) Hesabı</div>
-                <div className="text-xs text-slate-400">Bayi onayları, cari limitler ve fiyat kuralları için yönetim paneline geçin.</div>
+                <div className="text-xs text-slate-400">Yedek parça stoğu ve içerik yönetimi için yönetim paneline geçin.</div>
               </div>
             </div>
             <Link
               href="/admin"
-              className="px-5 py-2.5 bg-pcb-900 hover:bg-pcb-800 text-white font-black text-xs rounded-xl shadow-lg transition-all shrink-0 border border-pcb-700"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-lg transition-all shrink-0"
             >
               Yönetim Paneline Git →
             </Link>
           </div>
         )}
 
-        {/* B2B BAYİ BAŞLIK VE KÜNYE KARTI */}
+        {/* MÜŞTERİ BAŞLIK VE KÜNYE KARTI */}
         <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
           <div className="flex items-center gap-4 relative z-10">
-            <div className="w-16 h-16 bg-slate-900 text-copper-300 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg border border-slate-700 font-mono">
-              {user?.company?.legalName ? user.company.legalName[0].toUpperCase() : (user?.name ? user.name[0].toUpperCase() : 'B')}
+            <div className="w-16 h-16 bg-slate-900 text-amber-300 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg border border-slate-700 font-mono">
+              {user?.company?.legalName ? user.company.legalName[0].toUpperCase() : (user?.name ? user.name[0].toUpperCase() : 'M')}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl md:text-2xl font-black text-slate-900">
                   {user?.company?.legalName || user?.name}
                 </h1>
-                {isB2B && (
-                  <span className="px-3 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-full text-[11px] font-black uppercase tracking-wider">
-                    {user?.company?.customerGroup?.name || 'Onaylı Bayi'}
-                  </span>
-                )}
               </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
                 Yetkili: <strong>{user?.name}</strong> • {user?.email} • {user?.phone || 'Telefon Kayıtlı Değil'}
@@ -526,14 +521,14 @@ export default function MusteriHesapPage() {
                 <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-3xl p-6 border border-slate-800 shadow-xl">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-mono font-bold mb-2 border border-amber-500/30">
-                        <Sparkles size={13} /> AKTİF BAYİ İSKONTO GRUBU
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-mono font-bold mb-2 border border-blue-500/30">
+                        <Sparkles size={13} /> ERSA TİCARET ONLİNE YEDEK PARÇA
                       </div>
                       <h3 className="text-lg font-black text-white">
-                        {user?.company?.customerGroup?.name || 'Onaylı Ersa B2B Bayisi'}
+                        {user?.company?.legalName || user?.name || 'Kayıtlı Müşteri Hesabı'}
                       </h3>
                       <p className="text-xs text-slate-300 mt-1 max-w-xl">
-                        Tüm kombi elektronik anakartları ve beyaz eşya yedek parçalarında bayi özel liste iskontosu ve öncelikli kargo avantajınız aktiftir.
+                        Tüm kombi anakartları ve beyaz eşya parçalarında geniş ürün kataloğu ve anında stok danışma desteğimiz aktiftir.
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1113,7 +1108,7 @@ export default function MusteriHesapPage() {
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
                 <h3 className="text-xl font-black text-slate-900">ERSA TİCARET</h3>
-                <div className="text-xs text-slate-500 font-mono">B2B SİPARİŞ &amp; PROFORMA FİŞİ</div>
+                <div className="text-xs text-slate-500 font-mono">ONLİNE YEDEK PARÇA SİPARİŞ &amp; TEKLİF FİŞİ</div>
               </div>
               <div className="flex items-center gap-2">
                 <button

@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'B2B Bayilik Başvurusu | Özel Iskontolu Parça Tedariği',
-  description: 'Teknik servisler ve kombi ustalarına özel B2B bayilik başvurusu. Toptan yedek parça alımlarında vadeli cari hesap ve anında iskonto imkanı.',
+  title: 'Fiyat & Parça Danışma | Ersa Ticaret Online Yedek Parça',
+  description: 'Kombi ve beyaz eşya yedek parçaları için anında fiyat ve stok danışma hattı.',
   alternates: {
     canonical: 'https://www.ersaticaret.com/b2b-basvuru',
   },
   openGraph: {
-    title: 'B2B Bayilik Başvurusu | Ersa Ticaret',
-    description: 'Teknik servislere özel toptan fiyat ve cari hesap avantajları.',
+    title: 'Fiyat & Parça Danışma | Ersa Ticaret',
+    description: 'WhatsApp ve telefon üzerinden anında yedek parça fiyatı ve stok teyidi.',
     url: 'https://www.ersaticaret.com/b2b-basvuru',
   },
 };

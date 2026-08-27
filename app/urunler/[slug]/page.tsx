@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
     const canonicalUrl = `https://www.ersaticaret.com/urunler/${params.slug}`;
     const productImg = product.images?.[0]?.url || 'https://www.ersaticaret.com/vitrin.png';
-    const desc = `${product.name} - OEM Kodu: ${product.sku}. ${product.brand?.name ? `${product.brand.name} marka ` : ''}kombi ve beyaz eşya yedek parçası. Darıca Ersa Ticaret güvencesiyle aynı gün kargo ve uygun bayi fiyatları.`;
+    const desc = `${product.name} - OEM Kodu: ${product.sku}. ${product.brand?.name ? `${product.brand.name} marka ` : ''}kombi ve beyaz eşya yedek parçası. Darıca Ersa Ticaret güvencesiyle aynı gün stoktan teslim ve anında fiyat danışma.`;
 
     return {
       title: `${product.name} (${product.sku})`,
